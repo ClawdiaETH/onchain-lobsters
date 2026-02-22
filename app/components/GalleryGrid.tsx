@@ -29,7 +29,7 @@ export default function GalleryGrid({ seeds, total }: Props) {
         lineHeight: 2,
       }}>
         <div style={{ fontSize: 32, marginBottom: 16 }}>🦞</div>
-        <div>NO LOBSTERS MINED YET.</div>
+        <div>NO LOBSTERS MINTED YET.</div>
         <div style={{ fontSize: 12, color: "#4A4A6A", marginTop: 8 }}>BE THE FIRST.</div>
       </div>
     );
@@ -43,7 +43,7 @@ export default function GalleryGrid({ seeds, total }: Props) {
           GALLERY
         </div>
         <div style={{ fontFamily: MONO, fontSize: 11, color: "#4A4A6A", letterSpacing: "0.12em" }}>
-          {total} / 8,004 MINED
+          {total} / 8,004 MINTED
         </div>
       </div>
 

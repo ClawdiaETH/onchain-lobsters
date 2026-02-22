@@ -73,7 +73,7 @@ function SpinnerPanel({ label, sub, color = C.accent }: { label: string; sub: st
   );
 }
 
-export default function MinePage() {
+export default function MintPage() {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const randomTraits = useRandomTraits();
@@ -221,7 +221,7 @@ export default function MinePage() {
           {/* Title */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, color: C.accent, letterSpacing: "0.1em" }}>
-              MINE A LOBSTER
+              MINT A LOBSTER
             </div>
             <div style={{ fontFamily: MONO, fontSize: 12, color: C.textMuted, marginTop: 6, letterSpacing: "0.1em" }}>
               {MINT_PRICE_ETH} ETH · BURNS $CLAWDIA · BASE
@@ -237,7 +237,7 @@ export default function MinePage() {
               textAlign: "center",
             }}>
               <div style={{ fontSize: 24, marginBottom: 12 }}>🔌</div>
-              CONNECT WALLET TO MINE
+              CONNECT WALLET TO MINT
             </div>
           )}
 
@@ -279,7 +279,7 @@ export default function MinePage() {
                 onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
               >
-                COMMIT + BURN → MINE
+                COMMIT + BURN → MINT
               </button>
             </div>
           )}
@@ -403,7 +403,7 @@ export default function MinePage() {
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(200,72,32,0.1)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
               >
-                MINE ANOTHER
+                MINT ANOTHER
               </button>
             </div>
           )}

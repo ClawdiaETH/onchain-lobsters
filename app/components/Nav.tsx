@@ -39,7 +39,7 @@ export default function Nav() {
       {/* Nav links */}
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         <NavLink href="/">GALLERY</NavLink>
-        <NavLink href="/mine">MINE</NavLink>
+        <NavLink href="/mint">MINT</NavLink>
         <a
           href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
           target="_blank" rel="noreferrer"

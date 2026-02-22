@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { injected, coinbaseWallet } from "wagmi/connectors";
 import Nav from "@/components/Nav";
 import Ticker from "@/components/Ticker";
+import Footer from "@/components/Footer";
 
 const config = createConfig({
   chains: [base],
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <title>Onchain Lobsters — Mined with $CLAWDIA</title>
+        <title>Onchain Lobsters — Minted with $CLAWDIA</title>
         <meta name="description" content="40×52 pixel lobsters. Fully onchain. Burns $CLAWDIA to mint." />
         <meta property="og:title" content="Onchain Lobsters" />
         <meta property="og:description" content="Fully onchain generative pixel lobsters on Base." />
@@ -31,7 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <QueryClientProvider client={queryClient}>
             <Nav />
             <Ticker />
-            {children}
+            <main style={{ minHeight: "calc(100vh - 120px)" }}>
+              {children}
+            </main>
+            <Footer />
           </QueryClientProvider>
         </WagmiProvider>
       </body>
