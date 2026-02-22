@@ -3,6 +3,7 @@ import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import GalleryGrid from "@/components/GalleryGrid";
 import HeroMosaic from "@/components/HeroMosaic";
+import TotalBurned from "@/components/TotalBurned";
 import { CONTRACT_ADDRESS, LOBSTERS_ABI, MINT_PRICE_ETH, MAX_SUPPLY } from "@/constants";
 import { seedToTraits } from "@/lib/traits";
 import { renderLobsterSVG } from "@/lib/renderer";
@@ -131,7 +132,7 @@ export default async function HomePage() {
             <span>·</span>
             <span><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{total.toLocaleString()}</span> / {MAX_SUPPLY.toLocaleString()} MINTED</span>
             <span>·</span>
-            <span style={{ color: "#C84820" }}>BURNS $CLAWDIA</span>
+            <TotalBurned />
           </div>
         </div>
 
