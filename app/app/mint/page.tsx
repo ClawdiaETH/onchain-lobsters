@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient, useChainId, useSwitchChain } from "wagmi";
+import { base } from "wagmi/chains";
 import LobsterCanvas from "@/components/LobsterCanvas";
 import TraitSheet from "@/components/TraitSheet";
 import { useCommit } from "@/hooks/useCommit";
@@ -79,6 +80,9 @@ function SpinnerPanel({ label, sub, color = C.accent }: { label: string; sub: st
 
 export default function MintPage() {
   const { address } = useAccount();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const isWrongChain = !!address && chainId !== base.id;
   const publicClient = usePublicClient();
   const randomTraits = useRandomTraits();
   const pending = usePendingCommit(address);
@@ -245,8 +249,40 @@ export default function MintPage() {
             </div>
           )}
 
+          {/* WRONG CHAIN */}
+          {address && isWrongChain && (
+            <div style={{ paddingTop: 8 }}>
+              <div style={{
+                fontFamily: MONO, fontSize: 12, color: C.error,
+                letterSpacing: "0.1em", lineHeight: 1.8,
+                padding: "12px 14px", marginBottom: 20,
+                background: C.errorBg, border: `1px solid ${C.errorBord}`, borderRadius: 3,
+              }}>
+                ⚠️ WRONG NETWORK<br />
+                <span style={{ color: C.textMuted }}>
+                  Switch to Base to mint.
+                </span>
+              </div>
+              <button
+                onClick={() => switchChain({ chainId: base.id })}
+                disabled={isSwitching}
+                style={{
+                  fontFamily: MONO, fontSize: 13, letterSpacing: "0.18em", fontWeight: 700,
+                  padding: "13px 24px", width: "100%", borderRadius: 3,
+                  background: isSwitching ? "transparent" : C.accent,
+                  color: isSwitching ? C.textMuted : "#fff",
+                  border: `1px solid ${isSwitching ? C.border : C.accent}`,
+                  cursor: isSwitching ? "not-allowed" : "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                {isSwitching ? "SWITCHING..." : "SWITCH TO BASE →"}
+              </button>
+            </div>
+          )}
+
           {/* IDLE */}
-          {address && phase === "idle" && (
+          {address && phase === "idle" && !isWrongChain && (
             <div>
               <div style={{ marginBottom: 20 }}>
                 {[
@@ -294,7 +330,7 @@ export default function MintPage() {
           )}
 
           {/* WAITING */}
-          {address && phase === "waiting" && pending && (
+          {address && phase === "waiting" && pending && !isWrongChain && (
             <div>
               <div style={{
                 fontFamily: MONO, fontSize: 12, color: C.textSec,

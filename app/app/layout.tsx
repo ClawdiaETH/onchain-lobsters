@@ -1,6 +1,6 @@
 "use client";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { base } from "wagmi/chains";
+import { base, mainnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { injected, coinbaseWallet } from "wagmi/connectors";
 import Nav from "@/components/Nav";
@@ -8,12 +8,15 @@ import Ticker from "@/components/Ticker";
 import Footer from "@/components/Footer";
 
 const config = createConfig({
-  chains: [base],
+  chains: [base, mainnet],  // mainnet listed so wagmi doesn't choke on ETH-connected wallets
   connectors: [
     injected(),
     coinbaseWallet({ appName: "Onchain Lobsters" }),
   ],
-  transports: { [base.id]: http() },
+  transports: {
+    [base.id]: http(),
+    [mainnet.id]: http(),
+  },
 });
 
 const queryClient = new QueryClient();
