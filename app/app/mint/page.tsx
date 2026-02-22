@@ -131,19 +131,34 @@ export default function MintPage() {
     try {
       const txHash = await reveal(pending.salt, address);
       const receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
-      const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-      const transferLog = receipt.logs.find(l => l.topics[0] === TRANSFER_TOPIC);
-      const tokenId = transferLog ? Number(BigInt(transferLog.topics[3]!)) : null;
+
+      // Read seed directly from Revealed(address indexed minter, uint256 indexed tokenId, uint256 seed)
+      // event log — avoids a race condition where a follow-up readContract({ tokenSeed }) returns 0
+      // (uninitialized) when the RPC node hasn't yet propagated the updated state.
+      // keccak256("Revealed(address,uint256,uint256)") = 0xc100f0...
+      const REVEALED_SIG = "0xc100f01fdaa206bf36f50fd3c33f747cd602df3abaed791458e1d50d6084e125";
+      const revealedLog  = receipt.logs.find(l => l.topics[0] === REVEALED_SIG);
+
+      // Fallback sig for Transfer(address,address,uint256) in case Revealed log is missing
+      const TRANSFER_SIG = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+
+      let tokenId: number | null = null;
+      let seed: bigint | null = null;
+
+      if (revealedLog) {
+        tokenId = Number(BigInt(revealedLog.topics[2]!)); // indexed tokenId
+        seed    = BigInt(revealedLog.data);               // non-indexed seed
+      } else {
+        // Fallback: get tokenId from Transfer, skip seed (will show placeholder)
+        const transferLog = receipt.logs.find(l => l.topics[0] === TRANSFER_SIG);
+        if (transferLog) tokenId = Number(BigInt(transferLog.topics[3]!));
+      }
+
       if (tokenId) {
-        const seed = await publicClient!.readContract({
-          address: CONTRACT_ADDRESS,
-          abi: LOBSTERS_ABI,
-          functionName: "tokenSeed",
-          args: [BigInt(tokenId)],
-        });
-        setMinted(seedToTraits(seed as bigint));
+        setMinted(seed !== null ? seedToTraits(seed) : null);
         setMintedId(tokenId);
       }
+
       setRevealTx(txHash);
       clearPendingCommit(address);
       setPhase("minted");
