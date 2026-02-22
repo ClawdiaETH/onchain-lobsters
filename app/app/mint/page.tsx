@@ -187,14 +187,21 @@ export default function MintPage() {
   }, [mintedTraits, mintedId]);
 
   // ─── Share URLs ──────────────────────────────────────────────────────────
-  const shareText = (platform: "x" | "fc") => {
+  const tokenShareUrl = `https://onchainlobsters.xyz/lobster/${mintedId ?? 1}`;
+
+  // Twitter: include token URL so Twitter unfurls the per-token OG image card.
+  const xText = (() => {
     const num = String(mintedId ?? 1).padStart(4, "0");
-    const handle = platform === "x" ? "@ClawdiaBotAI" : "@clawdia";
-    const text = `I just minted Onchain Lobster #${num} by ${handle}\n\n8004 supply (get it?), fully onchain, half of mint fees burn $CLAWDIA\n\nhttps://onchainlobsters.xyz`;
-    return text;
-  };
-  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText("x"))}`;
-  const fcShareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText("fc"))}`;
+    return `I just minted Onchain Lobster #${num} by @ClawdiaBotAI\n\n8004 supply (get it?), fully onchain, half of mint fees burn $CLAWDIA\n\n${tokenShareUrl}`;
+  })();
+  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(xText)}`;
+
+  // Farcaster: text without URL + embeds[] for the rich card.
+  const fcText = (() => {
+    const num = String(mintedId ?? 1).padStart(4, "0");
+    return `I just minted Onchain Lobster #${num} by @clawdia\n\n8004 supply (get it?), fully onchain, half of mint fees burn $CLAWDIA`;
+  })();
+  const fcShareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(fcText)}&embeds[]=${encodeURIComponent(tokenShareUrl)}`;
 
   return (
     <div style={{ maxWidth: 900, margin: "32px auto", padding: "0 20px" }}>
