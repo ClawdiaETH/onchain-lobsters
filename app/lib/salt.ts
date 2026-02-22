@@ -4,7 +4,11 @@
 
 import { keccak256, encodePacked } from "viem";
 
-const STORAGE_KEY = (addr: string) => `lobster_commit_${addr.toLowerCase()}`;
+import { CONTRACT_ADDRESS } from "@/constants";
+
+// Key includes contract address so redeploys auto-invalidate stale commits.
+const STORAGE_KEY = (addr: string) =>
+  `lobster_commit_${CONTRACT_ADDRESS.toLowerCase()}_${addr.toLowerCase()}`;
 
 export interface PendingCommit {
   salt: `0x${string}`;
