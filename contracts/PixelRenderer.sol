@@ -473,33 +473,60 @@ contract PixelRenderer {
 
     // (Claws, markings, antennae, eyes, accessories moved to PixelRendererOverlay)
 
-    // ─── Buffer → SVG ────────────────────────────────────────────────────────
+    // ─── Buffer → SVG (RLE: one <path> per unique color) ────────────────────
+    // Groups all horizontal pixel runs by color, emitting a single <path fill="#RRGGBB" d="..."/>
+    // per unique color. Reduces SVG from ~33KB (many <rect> elements) to ~8KB.
+    // Each run: M{x},{y}h{w}v10h-{w}z — ~18 chars vs ~65 for an equivalent <rect fill=.../>
     function _bufToSVG(uint24[] memory buf) private pure returns (string memory) {
+        // ── Pass 1: collect unique colors ─────────────────────────────────────
+        // A lobster sprite uses ~30-60 unique RGB values (palette bounded by 256).
+        uint24[] memory palette = new uint24[](256);
+        uint256 nc = 0;
+        for (uint256 i = 0; i < W * H; i++) {
+            if (buf[i] == TRANSPARENT) continue;
+            uint24 c = buf[i];
+            bool found = false;
+            for (uint256 j = 0; j < nc; j++) {
+                if (palette[j] == c) { found = true; break; }
+            }
+            if (!found) palette[nc++] = c;
+        }
+
+        // ── Pass 2: one <path> per color ─────────────────────────────────────
         bytes memory out = abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1560" viewBox="0 0 400 520" shape-rendering="crispEdges" style="image-rendering:pixelated;image-rendering:crisp-edges">'
+            '<svg xmlns="http://www.w3.org/2000/svg"'
+            ' width="1200" height="1560"'
+            ' viewBox="0 0 400 520"'
+            ' shape-rendering="crispEdges"'
+            ' style="image-rendering:pixelated;image-rendering:crisp-edges">'
         );
 
-        for (uint256 y = 0; y < H; y++) {
-            uint256 x = 0;
-            while (x < W) {
-                uint24 color = buf[y * W + x];
-                if (color == TRANSPARENT) { x++; continue; }
-                // Run-length encode same-color adjacent pixels
-                uint256 run = 1;
-                while (x + run < W && buf[y * W + x + run] == color) run++;
-                // Emit rect
-                out = abi.encodePacked(
-                    out,
-                    '<rect x="', (x * PX).toString(),
-                    '" y="', (y * PX).toString(),
-                    '" width="', (run * PX).toString(),
-                    '" height="10" fill="#',
-                    _hex3(RGB(uint8(color >> 16), uint8(color >> 8), uint8(color))),
-                    '"/>'
-                );
-                x += run;
+        for (uint256 ci = 0; ci < nc; ci++) {
+            uint24 color = palette[ci];
+            bytes memory d;
+
+            for (uint256 y = 0; y < H; y++) {
+                uint256 x = 0;
+                while (x < W) {
+                    if (buf[y * W + x] != color) { x++; continue; }
+                    // Extend run
+                    uint256 run = 1;
+                    while (x + run < W && buf[y * W + x + run] == color) run++;
+                    // M{px},{py}h{pw}v10h-{pw}z
+                    uint256 pw = run * PX;
+                    d = abi.encodePacked(
+                        d,
+                        'M', (x * PX).toString(), ',', (y * PX).toString(),
+                        'h', pw.toString(), 'v10h-', pw.toString(), 'z'
+                    );
+                    x += run;
+                }
             }
+
+            RGB memory rgb = RGB(uint8(color >> 16), uint8(color >> 8), uint8(color));
+            out = abi.encodePacked(out, '<path fill="#', _hex3(rgb), '" d="', d, '"/>');
         }
+
         out = abi.encodePacked(out, '</svg>');
         return string(out);
     }
