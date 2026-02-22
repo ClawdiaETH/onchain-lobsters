@@ -330,7 +330,7 @@ export default function MintPage() {
           )}
 
           {/* WAITING */}
-          {address && phase === "waiting" && pending && (
+          {address && phase === "waiting" && pending && !isWrongChain && (
             <div>
               <div style={{
                 fontFamily: MONO, fontSize: 12, color: C.textSec,
