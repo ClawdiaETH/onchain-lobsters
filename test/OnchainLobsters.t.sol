@@ -271,18 +271,16 @@ contract OnchainLobstersTest is Test {
         bytes memory b = bytes(uri);
         assertTrue(b.length > 200, "tokenURI too short");
 
-        // "data:application/json;base64,"
-        //  0123456789012345678901234567890
-        //           1111111111222222222
-        // d(0)a(1)t(2)a(3):(4)a(5)p(6)p(7)l(8)i(9)c(10)a(11)t(12)i(13)o(14)n(15)
-        // /(16)j(17)s(18)o(19)n(20);(21)b(22)a(23)s(24)e(25)6(26)4(27),(28)
+        // "data:application/json,{"  (raw JSON — no outer base64 to save gas for OpenSea)
+        //  d(0)a(1)t(2)a(3):(4)...j(17)s(18)o(19)n(20),(21)
         assertEq(b[0],  'd'); // d
         assertEq(b[1],  'a'); // a
         assertEq(b[2],  't'); // t
         assertEq(b[3],  'a'); // a
         assertEq(b[4],  ':'); // :
         assertEq(b[17], 'j'); // json
-        assertEq(b[28], ','); // trailing comma before base64 payload
+        assertEq(b[21], ','); // comma after "data:application/json"
+        assertEq(b[22], '{'); // opening brace of raw JSON
     }
 
     function testTokenURINonexistentReverts() public {
@@ -380,11 +378,12 @@ contract OnchainLobstersTest is Test {
     function test_contractURI_returnsBase64JSON() public view {
         string memory uri = nft.contractURI();
         bytes memory b = bytes(uri);
-        // Must start with "data:application/json;base64,"
+        // "data:application/json,{"  (raw JSON — no outer base64)
         assertEq(b[0],  'd');
         assertEq(b[4],  ':');
         assertEq(b[17], 'j'); // "json"
-        assertEq(b[28], ','); // comma before base64 payload
+        assertEq(b[21], ','); // comma after "data:application/json"
+        assertEq(b[22], '{'); // opening brace of raw JSON
         assertTrue(b.length > 200, "contractURI too short");
     }
 
