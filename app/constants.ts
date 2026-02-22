@@ -19,10 +19,14 @@ export const MIN_REVEAL_BLOCKS = 1;      // must wait at least 1 block
 export const LOBSTERS_ABI = parseAbi([
   "function commit(bytes32 commitment) external payable",
   "function reveal(bytes32 salt, address recipient) external",
-  "function commits(address) external view returns (bytes32 commitment, uint256 blockNumber, uint256 burnAmount)",
+  "function commits(address) external view returns (bytes32 commitment, uint256 blockNumber)",
   "function totalMinted() external view returns (uint256)",
   "function tokenSeed(uint256) external view returns (uint256)",
   "function tokenURI(uint256) external view returns (string)",
+  "function mintPriceETH() external view returns (uint256)",
+  "function clawdiaPoolKey() external view returns (address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks)",
+  "event ClawdiaBurned(uint256 indexed tokenId, uint256 clawdiaAmount)",
+  "event Revealed(address indexed minter, uint256 indexed tokenId, uint256 seed)",
 ]);
 
 export const ERC20_ABI = parseAbi([
