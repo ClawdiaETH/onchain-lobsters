@@ -4,8 +4,11 @@ pragma solidity ^0.8.20;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "./lib/Base64.sol";
-import {PixelRenderer} from "./PixelRenderer.sol";
 import {TraitDecode} from "./TraitDecode.sol";
+
+interface IPixelRenderer {
+    function render(TraitDecode.Traits memory t) external view returns (string memory);
+}
 
 interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
@@ -48,6 +51,7 @@ contract OnchainLobsters is ERC721, Ownable {
 
     // ── State ────────────────────────────────────────────────────────────────
     address public immutable CLAWDIA;
+    address public immutable RENDERER;   // PixelRenderer deployed contract
     uint256 public mintPriceETH;         // in wei, configurable by owner
     uint256 public totalMinted;
     address public treasury;
@@ -68,11 +72,13 @@ contract OnchainLobsters is ERC721, Ownable {
     constructor(
         address _clawdia,
         uint256 _mintPriceETH,
-        address _treasury
+        address _treasury,
+        address _renderer
     ) ERC721("Onchain Lobsters", "LOBSTER") Ownable(msg.sender) {
         CLAWDIA      = _clawdia;
         mintPriceETH = _mintPriceETH;
         treasury     = _treasury;
+        RENDERER     = _renderer;
     }
 
     // ── Mining ───────────────────────────────────────────────────────────────
@@ -178,7 +184,7 @@ contract OnchainLobsters is ERC721, Ownable {
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
         TraitDecode.Traits memory t = TraitDecode.decode(tokenSeed[tokenId]);
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = IPixelRenderer(RENDERER).render(t);
         string memory attrs = TraitDecode.attributes(t);
         return string(abi.encodePacked(
             "data:application/json;base64,",

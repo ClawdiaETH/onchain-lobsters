@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {OnchainLobsters} from "../contracts/OnchainLobsters.sol";
 import {TraitDecode} from "../contracts/TraitDecode.sol";
 import {PixelRenderer} from "../contracts/PixelRenderer.sol";
+import {PixelRendererOverlay} from "../contracts/PixelRendererOverlay.sol";
 
 // Minimal ERC20 mock for tests
 contract MockCLAWDIA {
@@ -22,15 +23,19 @@ contract MockCLAWDIA {
 }
 
 contract OnchainLobstersTest is Test {
-    OnchainLobsters public nft;
-    MockCLAWDIA public clawdia;
+    OnchainLobsters       public nft;
+    PixelRenderer         public renderer;
+    PixelRendererOverlay  public overlay;
+    MockCLAWDIA           public clawdia;
     address public user = address(0xBEEF);
     address public treasury = address(0xFEED);
     uint256 public constant MINT_PRICE = 0.005 ether;
 
     function setUp() public {
-        clawdia = new MockCLAWDIA();
-        nft = new OnchainLobsters(address(clawdia), MINT_PRICE, treasury);
+        clawdia  = new MockCLAWDIA();
+        overlay  = new PixelRendererOverlay();
+        renderer = new PixelRenderer(address(overlay));
+        nft = new OnchainLobsters(address(clawdia), MINT_PRICE, treasury, address(renderer));
         vm.deal(user, 10 ether);
     }
 
@@ -171,7 +176,7 @@ contract OnchainLobstersTest is Test {
             mutation: 0, scene: 0, marking: 0, claws: 0, eyes: 0,
             accessory: 0, tailVariant: 0, brokenAntenna: false, special: 0
         });
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = renderer.render(t);
         assertTrue(bytes(svg).length > 0);
         // Must start with SVG tag
         bytes memory b = bytes(svg);
@@ -184,7 +189,7 @@ contract OnchainLobstersTest is Test {
     // ─── Individual mutation renders (avoid MemoryOOG from looping) ──────────
 
     function _renderTrait(TraitDecode.Traits memory t) internal view {
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = renderer.render(t);
         assertTrue(bytes(svg).length > 100, "SVG too short");
     }
     function _baseTraits() internal pure returns (TraitDecode.Traits memory) {
@@ -240,7 +245,7 @@ contract OnchainLobstersTest is Test {
             mutation: 5, scene: 0, marking: 0, claws: 0, eyes: 0,
             accessory: 0, tailVariant: 0, brokenAntenna: false, special: 0
         });
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = renderer.render(t);
         assertTrue(bytes(svg).length > 100);
         // Search entire SVG for both base colors
         bytes memory b = bytes(svg);
