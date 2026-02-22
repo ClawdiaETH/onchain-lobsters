@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {OnchainLobsters} from "../contracts/OnchainLobsters.sol";
 import {TraitDecode} from "../contracts/TraitDecode.sol";
 import {PixelRenderer} from "../contracts/PixelRenderer.sol";
+import {PixelRendererOverlay} from "../contracts/PixelRendererOverlay.sol";
 
 // Minimal ERC20 mock for tests
 contract MockCLAWDIA {
@@ -22,15 +23,19 @@ contract MockCLAWDIA {
 }
 
 contract OnchainLobstersTest is Test {
-    OnchainLobsters public nft;
-    MockCLAWDIA public clawdia;
+    OnchainLobsters       public nft;
+    PixelRenderer         public renderer;
+    PixelRendererOverlay  public overlay;
+    MockCLAWDIA           public clawdia;
     address public user = address(0xBEEF);
     address public treasury = address(0xFEED);
     uint256 public constant MINT_PRICE = 0.005 ether;
 
     function setUp() public {
-        clawdia = new MockCLAWDIA();
-        nft = new OnchainLobsters(address(clawdia), MINT_PRICE, treasury);
+        clawdia  = new MockCLAWDIA();
+        overlay  = new PixelRendererOverlay();
+        renderer = new PixelRenderer(address(overlay));
+        nft = new OnchainLobsters(address(clawdia), MINT_PRICE, treasury, address(renderer));
         vm.deal(user, 10 ether);
     }
 
@@ -171,7 +176,7 @@ contract OnchainLobstersTest is Test {
             mutation: 0, scene: 0, marking: 0, claws: 0, eyes: 0,
             accessory: 0, tailVariant: 0, brokenAntenna: false, special: 0
         });
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = renderer.render(t);
         assertTrue(bytes(svg).length > 0);
         // Must start with SVG tag
         bytes memory b = bytes(svg);
@@ -184,7 +189,7 @@ contract OnchainLobstersTest is Test {
     // ─── Individual mutation renders (avoid MemoryOOG from looping) ──────────
 
     function _renderTrait(TraitDecode.Traits memory t) internal view {
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = renderer.render(t);
         assertTrue(bytes(svg).length > 100, "SVG too short");
     }
     function _baseTraits() internal pure returns (TraitDecode.Traits memory) {
@@ -240,7 +245,7 @@ contract OnchainLobstersTest is Test {
             mutation: 5, scene: 0, marking: 0, claws: 0, eyes: 0,
             accessory: 0, tailVariant: 0, brokenAntenna: false, special: 0
         });
-        string memory svg = PixelRenderer.render(t);
+        string memory svg = renderer.render(t);
         assertTrue(bytes(svg).length > 100);
         // Search entire SVG for both base colors
         bytes memory b = bytes(svg);
@@ -284,4 +289,120 @@ contract OnchainLobstersTest is Test {
         vm.expectRevert();
         nft.tokenURI(999);
     }
+
+    // ─── Fee Routing ──────────────────────────────────────────────────────────
+
+    /// @notice After commit+reveal, 100% of mintPriceETH reaches the treasury.
+    ///         In the test environment the PoolManager has no code, so _swapAndBurn
+    ///         falls back via _sendToTreasury, meaning BOTH halves land at treasury.
+    function test_fee_routing() public {
+        uint256 before = treasury.balance;
+
+        bytes32 salt = keccak256("fee-routing-test");
+        bytes32 commitment = keccak256(abi.encodePacked(salt, user));
+        vm.prank(user);
+        nft.commit{value: MINT_PRICE}(commitment);
+
+        vm.roll(block.number + 2);
+        vm.prank(user);
+        nft.reveal(salt, user);
+
+        // In test env (no PoolManager): burnHalf goes to treasury via fallback + protocolHalf
+        // goes directly — total = mintPriceETH
+        assertEq(treasury.balance - before, MINT_PRICE, "treasury did not receive full mint price");
+    }
+
+    /// @notice Confirm treasury address is set correctly and ETH routing uses it.
+    function test_fee_routing_treasury_address() public {
+        assertEq(nft.treasury(), address(0xFEED), "treasury mismatch");
+    }
+
+    // ─── Direct Mint (bankrbot) ───────────────────────────────────────────────
+
+    function test_mintDirect_disabledByDefault() public {
+        vm.prank(user);
+        vm.expectRevert("direct mint disabled");
+        nft.mintDirect{value: MINT_PRICE}(user);
+    }
+
+    function test_mintDirect_happyPath() public {
+        nft.setBankrbotEnabled(true);
+
+        uint256 treasuryBefore = treasury.balance;
+        vm.prank(user);
+        nft.mintDirect{value: MINT_PRICE}(user);
+
+        assertEq(nft.totalMinted(), 1, "totalMinted should be 1");
+        assertEq(nft.ownerOf(1), user, "user should own token 1");
+        // In test env: both halves go to treasury
+        assertEq(treasury.balance - treasuryBefore, MINT_PRICE, "treasury did not receive full mint price");
+    }
+
+    function test_mintDirect_feeRouting() public {
+        nft.setBankrbotEnabled(true);
+        uint256 before = treasury.balance;
+
+        vm.prank(user);
+        nft.mintDirect{value: MINT_PRICE}(user);
+
+        assertEq(treasury.balance - before, MINT_PRICE, "mintDirect: treasury did not receive full mint price");
+    }
+
+    function test_mintDirect_overpayRefunded() public {
+        nft.setBankrbotEnabled(true);
+        uint256 before = user.balance;
+
+        vm.prank(user);
+        nft.mintDirect{value: MINT_PRICE + 0.1 ether}(user);
+
+        assertApproxEqAbs(user.balance, before - MINT_PRICE, 1e6, "excess not refunded");
+    }
+
+    function test_mintDirect_insufficientETH() public {
+        nft.setBankrbotEnabled(true);
+        vm.prank(user);
+        vm.expectRevert("insufficient ETH");
+        nft.mintDirect{value: MINT_PRICE - 1}(user);
+    }
+
+    // ─── OpenSea / ERC-165 ────────────────────────────────────────────────────
+
+    function test_supportsInterface_ERC721() public view {
+        // ERC-721 interface ID
+        assertTrue(nft.supportsInterface(0x80ac58cd), "should support ERC721");
+    }
+
+    function test_supportsInterface_ERC721Metadata() public view {
+        // ERC-721Metadata interface ID
+        assertTrue(nft.supportsInterface(0x5b5e139f), "should support ERC721Metadata");
+    }
+
+    function test_contractURI_returnsBase64JSON() public view {
+        string memory uri = nft.contractURI();
+        bytes memory b = bytes(uri);
+        // Must start with "data:application/json;base64,"
+        assertEq(b[0],  'd');
+        assertEq(b[4],  ':');
+        assertEq(b[17], 'j'); // "json"
+        assertEq(b[28], ','); // comma before base64 payload
+        assertTrue(b.length > 200, "contractURI too short");
+    }
+
+    function test_transferEvent_fromZero() public {
+        bytes32 salt = keccak256("transfer-event-test");
+        bytes32 commitment = keccak256(abi.encodePacked(salt, user));
+        vm.prank(user);
+        nft.commit{value: MINT_PRICE}(commitment);
+        vm.roll(block.number + 2);
+
+        // ERC-721 Transfer event: Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
+        vm.expectEmit(true, true, true, false);
+        emit Transfer(address(0), user, 1);
+
+        vm.prank(user);
+        nft.reveal(salt, user);
+    }
+
+    // Declare Transfer event to use with expectEmit
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 }
