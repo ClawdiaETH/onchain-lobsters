@@ -26,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="description" content="40×52 pixel lobsters. Fully onchain. Burns $CLAWDIA to mint." />
         <meta property="og:title" content="Onchain Lobsters" />
         <meta property="og:description" content="Fully onchain generative pixel lobsters on Base." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
       </head>
       <body style={{ background: "#050509", margin: 0, padding: 0 }}>
         <WagmiProvider config={config}>
