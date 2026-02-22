@@ -1,4 +1,5 @@
 // constants.ts — single source of truth for all addresses and config
+import { parseAbi } from "viem";
 export const CHAIN_ID = 8453; // Base Mainnet
 export const CHAIN_ID_TESTNET = 84532; // Base Sepolia
 
@@ -14,18 +15,18 @@ export const MAX_SUPPLY = 8004;
 export const COMMIT_WINDOW_BLOCKS = 100; // max blocks before reveal expires
 export const MIN_REVEAL_BLOCKS = 1;      // must wait at least 1 block
 
-// ABI — minimal surface the frontend calls
-export const LOBSTERS_ABI = [
+// ABI — minimal surface the frontend calls (parseAbi gives viem a typed Abi)
+export const LOBSTERS_ABI = parseAbi([
   "function commit(bytes32 commitment) external payable",
   "function reveal(bytes32 salt, address recipient) external",
   "function commits(address) external view returns (bytes32 commitment, uint256 blockNumber, uint256 burnAmount)",
   "function totalMinted() external view returns (uint256)",
   "function tokenSeed(uint256) external view returns (uint256)",
   "function tokenURI(uint256) external view returns (string)",
-] as const;
+]);
 
-export const ERC20_ABI = [
+export const ERC20_ABI = parseAbi([
   "function balanceOf(address) external view returns (uint256)",
   "function allowance(address owner, address spender) external view returns (uint256)",
   "function approve(address spender, uint256 amount) external returns (bool)",
-] as const;
+]);

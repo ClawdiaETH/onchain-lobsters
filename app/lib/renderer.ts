@@ -579,7 +579,7 @@ export function renderLobster(t: Traits): Uint8ClampedArray {
 export function drawToCanvas(canvas: HTMLCanvasElement | null, traits: Traits) {
   if (!canvas) return;
   const buf = renderLobster(traits);
-  const id = new ImageData(buf, W, H);
+  const id = new ImageData(buf.slice(), W, H);
   const off = document.createElement('canvas');
   off.width = W; off.height = H;
   off.getContext('2d')!.putImageData(id, 0, 0);
@@ -587,4 +587,35 @@ export function drawToCanvas(canvas: HTMLCanvasElement | null, traits: Traits) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+}
+
+// ─── SVG output (server-safe, mirrors PixelRenderer.sol _bufToSVG) ──────────
+export function renderLobsterSVG(traits: Traits, scale = 10): string {
+  const buf = renderLobster(traits);
+  const rects: string[] = [];
+
+  for (let y = 0; y < H; y++) {
+    let x = 0;
+    while (x < W) {
+      const i = (y * W + x) * 4;
+      if (buf[i + 3] === 0) { x++; continue; } // transparent
+      const r = buf[i], g = buf[i + 1], b = buf[i + 2];
+      const hex = (n: number) => n.toString(16).padStart(2, '0').toUpperCase();
+      const color = `${hex(r)}${hex(g)}${hex(b)}`;
+      // Run-length encode same-color neighbours
+      let run = 1;
+      while (x + run < W) {
+        const j = (y * W + x + run) * 4;
+        if (buf[j + 3] === 0 || buf[j] !== r || buf[j + 1] !== g || buf[j + 2] !== b) break;
+        run++;
+      }
+      rects.push(
+        `<rect x="${x * scale}" y="${y * scale}" width="${run * scale}" height="${scale}" fill="#${color}"/>`
+      );
+      x += run;
+    }
+  }
+
+  const vw = W * scale, vh = H * scale;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" shape-rendering="crispEdges">${rects.join('')}</svg>`;
 }
