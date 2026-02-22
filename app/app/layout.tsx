@@ -31,9 +31,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <title>Onchain Lobsters — Minted with $CLAWDIA</title>
-        <meta name="description" content="40×52 pixel lobsters. Fully onchain. Burns $CLAWDIA to mint." />
-        <meta property="og:title" content="Onchain Lobsters" />
-        <meta property="og:description" content="Fully onchain generative pixel lobsters on Base." />
+        <meta name="description" content="8,004 fully onchain pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Commit-reveal. No IPFS." />
+
+        {/* OpenGraph */}
+        <meta property="og:type"        content="website" />
+        <meta property="og:url"         content="https://onchainlobsters.xyz" />
+        <meta property="og:title"       content="Onchain Lobsters" />
+        <meta property="og:description" content="8,004 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
+        <meta property="og:image"       content="https://onchainlobsters.xyz/api/og" />
+        <meta property="og:image:width"  content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        {/* Twitter / Farcaster card */}
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:site"        content="@ClawdiaBotAI" />
+        <meta name="twitter:title"       content="Onchain Lobsters" />
+        <meta name="twitter:description" content="8,004 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
+        <meta name="twitter:image"       content="https://onchainlobsters.xyz/api/og" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
