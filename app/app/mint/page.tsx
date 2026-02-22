@@ -84,7 +84,7 @@ export default function MintPage() {
   const isWrongChain = !!address && chain?.id !== base.id;
   const publicClient = usePublicClient();
   const randomTraits = useRandomTraits();
-  const pending = usePendingCommit(address);
+  const [pending, reloadPending] = usePendingCommit(address);
   const { commit } = useCommit();
   const { reveal } = useReveal();
 
@@ -114,13 +114,14 @@ export default function MintPage() {
       const txHash = await commit(commitment);
       const receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
       savePendingCommit(address, { salt, commitment, commitBlock: Number(receipt.blockNumber), txHash });
+      reloadPending();
       setPhase("waiting");
     } catch (e: any) {
       clearPendingCommit(address);
       setError(e.shortMessage ?? e.message ?? "Commit failed");
       setPhase("idle");
     }
-  }, [address, commit, publicClient]);
+  }, [address, commit, publicClient, reloadPending]);
 
   // ── Reveal ────────────────────────────────────────────────────────────────
   const handleReveal = useCallback(async () => {

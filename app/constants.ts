@@ -18,7 +18,7 @@ export const MIN_REVEAL_BLOCKS = 1;      // must wait at least 1 block
 export const LOBSTERS_ABI = parseAbi([
   "function commit(bytes32 commitment) external payable",
   "function reveal(bytes32 salt, address recipient) external",
-  "function commits(address) external view returns (bytes32 commitment, uint256 blockNumber, uint256 burnAmount)",
+  "function commits(address) external view returns (bytes32 commitment, uint256 blockNumber)",
   "function totalMinted() external view returns (uint256)",
   "function tokenSeed(uint256) external view returns (uint256)",
   "function tokenURI(uint256) external view returns (string)",
