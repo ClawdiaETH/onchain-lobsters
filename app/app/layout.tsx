@@ -3,9 +3,13 @@ import { WagmiProvider, createConfig, http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { injected, coinbaseWallet } from "wagmi/connectors";
+import { Attribution } from "ox/erc8021";
 import Nav from "@/components/Nav";
 import Ticker from "@/components/Ticker";
 import Footer from "@/components/Footer";
+
+// Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
+const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
 
 const config = createConfig({
   chains: [base, mainnet],  // mainnet listed so wagmi doesn't choke on ETH-connected wallets
@@ -17,6 +21,7 @@ const config = createConfig({
     [base.id]: http(),
     [mainnet.id]: http(),
   },
+  dataSuffix: DATA_SUFFIX,
 });
 
 const queryClient = new QueryClient();
