@@ -11,6 +11,7 @@ import { useBlockCountdown } from "@/hooks/useBlockCountdown";
 import { seedToTraits } from "@/lib/traits";
 import { generateSalt, computeCommitment, savePendingCommit, clearPendingCommit } from "@/lib/salt";
 import { CONTRACT_ADDRESS, LOBSTERS_ABI, MINT_PRICE_ETH, COMMIT_WINDOW_BLOCKS } from "@/constants";
+import { drawToCanvas, W, H } from "@/lib/renderer";
 import type { Traits } from "@/lib/renderer";
 
 const MONO = "'Courier New',monospace";
@@ -169,6 +170,31 @@ export default function MintPage() {
   }, [address, pending, reveal, publicClient]);
 
   const displayTraits = mintedTraits ?? randomTraits;
+
+  // ─── Download PNG ────────────────────────────────────────────────────────
+  const handleDownload = useCallback(() => {
+    if (!mintedTraits || mintedId === null) return;
+    const scale = 10;
+    const canvas = document.createElement("canvas");
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    drawToCanvas(canvas, mintedTraits);
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `onchain-lobster-${String(mintedId).padStart(4, "0")}.png`;
+    a.click();
+  }, [mintedTraits, mintedId]);
+
+  // ─── Share URLs ──────────────────────────────────────────────────────────
+  const shareText = (platform: "x" | "fc") => {
+    const num = String(mintedId ?? 1).padStart(4, "0");
+    const handle = platform === "x" ? "@ClawdiaBotAI" : "@clawdia";
+    const text = `I just minted Onchain Lobster #${num} by ${handle}\n\n8004 supply (get it?), fully onchain, half of mint fees burn $CLAWDIA\n\nhttps://onchainlobsters.xyz`;
+    return text;
+  };
+  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText("x"))}`;
+  const fcShareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText("fc"))}`;
 
   return (
     <div style={{ maxWidth: 900, margin: "32px auto", padding: "0 20px" }}>
@@ -427,7 +453,8 @@ export default function MintPage() {
               }}>
                 🦞 LOBSTER #{String(mintedId).padStart(4, "0")} MINTED
               </div>
-              <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+              {/* Explorer links */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
                 {[
                   { label: "BASESCAN ↗", href: `https://basescan.org/tx/${revealTxHash}` },
                   { label: "OPENSEA ↗", href: `https://opensea.io/assets/base/${CONTRACT_ADDRESS}/${mintedId}` },
@@ -447,6 +474,50 @@ export default function MintPage() {
                   </a>
                 ))}
               </div>
+
+              {/* Download + Share */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                <button
+                  onClick={handleDownload}
+                  style={{
+                    fontFamily: MONO, fontSize: 11, padding: "6px 14px",
+                    background: "transparent", color: C.textSec,
+                    border: `1px solid ${C.border}`, borderRadius: 3, cursor: "pointer",
+                    letterSpacing: "0.12em", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = C.textPri; e.currentTarget.style.borderColor = C.borderAct; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = C.textSec; e.currentTarget.style.borderColor = C.border; }}
+                >
+                  DOWNLOAD ↓
+                </button>
+                <a
+                  href={xShareUrl} target="_blank" rel="noreferrer"
+                  style={{
+                    fontFamily: MONO, fontSize: 11, color: C.textSec,
+                    letterSpacing: "0.12em", textDecoration: "none",
+                    padding: "6px 14px", border: `1px solid ${C.border}`,
+                    borderRadius: 3, transition: "all 0.15s", display: "inline-block",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = C.textPri; e.currentTarget.style.borderColor = C.borderAct; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = C.textSec; e.currentTarget.style.borderColor = C.border; }}
+                >
+                  SHARE ON X ↗
+                </a>
+                <a
+                  href={fcShareUrl} target="_blank" rel="noreferrer"
+                  style={{
+                    fontFamily: MONO, fontSize: 11, color: C.textSec,
+                    letterSpacing: "0.12em", textDecoration: "none",
+                    padding: "6px 14px", border: `1px solid ${C.border}`,
+                    borderRadius: 3, transition: "all 0.15s", display: "inline-block",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = C.textSec; e.currentTarget.style.borderColor = C.border; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "#9B59B6"; e.currentTarget.style.borderColor = "#4A2060"; }}
+                >
+                  SHARE ON FC ↗
+                </a>
+              </div>
+
               <button
                 onClick={() => { setPhase("idle"); setMinted(null); setMintedId(null); setRevealTx(null); }}
                 style={{
