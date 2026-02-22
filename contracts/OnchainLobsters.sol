@@ -46,7 +46,14 @@ interface IPoolManager {
     function unlock(bytes calldata data) external returns (bytes memory);
     function swap(PoolKey calldata key, SwapParams calldata params, bytes calldata hookData)
         external returns (int256 delta);                    // BalanceDelta as int256
+    /// @dev settle() credits msg.sender for whatever was transferred/synced.
+    ///      For ERC20: call sync(currency) FIRST, then transfer ERC20 to PoolManager, then settle().
+    ///      settle() reads getSyncedCurrency() to know which ERC20 to account for.
+    ///      For native ETH: settle{value: amount}() directly (no sync needed).
     function settle() external payable returns (uint256);
+    /// @dev sync(currency) snapshots PoolManager's current ERC20 balance so settle() can diff it.
+    ///      Must be called BEFORE the ERC20 transfer and before settle().
+    function sync(address currency) external;
     function take(address currency, address to, uint256 amount) external;
 }
 
@@ -205,6 +212,13 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
                     IERC20Burnable(CLAWDIA).burn(burned);
                 }
             }
+            // Recover leftover WETH: if pool had zero liquidity the swap returns delta (0,0),
+            // callback skips settle/take, but wethAmount still sits in our contract as WETH.
+            uint256 leftover = _wethBalance();
+            if (leftover > 0) {
+                IWETH(WETH).withdraw(leftover);
+                _sendToTreasury(leftover);
+            }
         } catch {
             // Swap failed: unwrap WETH back to ETH and send to treasury
             uint256 wethBal = _wethBalance();
@@ -240,12 +254,16 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
             amount1 := signextend(15, delta) // sign-extend lower 128 bits
         }
 
-        // Settle WETH debt: transfer WETH to PoolManager, then call settle()
+        // Settle WETH debt: sync(WETH) → transfer WETH → settle()
+        // V4 ERC20 flow: sync() snapshots PoolManager's WETH balance, we transfer WETH in,
+        // then settle() calls _settle(msg.sender) which reads getSyncedCurrency() == WETH
+        // and computes paid = currentWETHBalance - snapshot = amount we just transferred.
         if (amount0 < 0) {
             uint256 wethOwed = uint256(uint128(-amount0));
+            IPoolManager(POOL_MANAGER).sync(WETH);   // snapshot WETH balance in PoolManager
             bool ok = IERC20(WETH).transfer(POOL_MANAGER, wethOwed);
             require(ok, "WETH transfer failed");
-            IPoolManager(POOL_MANAGER).settle();
+            IPoolManager(POOL_MANAGER).settle();      // settle() reads synced currency (WETH)
         }
 
         // Take CLAWDIA from PoolManager
