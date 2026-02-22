@@ -1,0 +1,31 @@
+// constants.ts — single source of truth for all addresses and config
+export const CHAIN_ID = 8453; // Base Mainnet
+export const CHAIN_ID_TESTNET = 84532; // Base Sepolia
+
+// Fill in after deployment
+export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
+export const CLAWDIA_ADDRESS = "0xbbd9aDe16525acb4B336b6dAd3b9762901522B07" as `0x${string}`;
+export const TREASURY_ADDRESS = "0xf17b5dD382B048Ff4c05c1C9e4E24cfC5C6adAd9" as `0x${string}`;
+
+// Mint: user pays ETH → contract swaps half for $CLAWDIA → burns it
+export const MINT_PRICE_ETH = "0.005"; // ETH total (half swapped+burned, half protocol)
+
+export const MAX_SUPPLY = 8004;
+export const COMMIT_WINDOW_BLOCKS = 100; // max blocks before reveal expires
+export const MIN_REVEAL_BLOCKS = 1;      // must wait at least 1 block
+
+// ABI — minimal surface the frontend calls
+export const LOBSTERS_ABI = [
+  "function commit(bytes32 commitment) external payable",
+  "function reveal(bytes32 salt, address recipient) external",
+  "function commits(address) external view returns (bytes32 commitment, uint256 blockNumber, uint256 burnAmount)",
+  "function totalMinted() external view returns (uint256)",
+  "function tokenSeed(uint256) external view returns (uint256)",
+  "function tokenURI(uint256) external view returns (string)",
+] as const;
+
+export const ERC20_ABI = [
+  "function balanceOf(address) external view returns (uint256)",
+  "function allowance(address owner, address spender) external view returns (uint256)",
+  "function approve(address spender, uint256 amount) external returns (bool)",
+] as const;
