@@ -349,7 +349,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         // SVG stays base64-encoded; JSON is returned as raw UTF-8 data URI which OpenSea supports.
         return string(abi.encodePacked(
             'data:application/json,',
-            '{"name":"Onchain Lobster #', _str(tokenId),
+            '{"name":"Onchain Lobster %23', _str(tokenId),
             '","description":"8,004 fully onchain pixel lobsters. Minted with $CLAWDIA on Base. Commit-reveal. No IPFS. CC0.",',
             '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(svg)), '",',
             '"attributes":', attrs,
