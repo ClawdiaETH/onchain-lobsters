@@ -359,6 +359,19 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         ));
     }
 
+    // ── Mint status (standard interfaces for Bankrbot / launchpads) ───────────
+
+    /// @notice Returns true if direct minting is currently open.
+    ///         Standard boolean toggle checked by Bankrbot and many launchpads.
+    function saleIsActive() external view returns (bool) {
+        return bankrbotEnabled && totalMinted < MAX_SUPPLY;
+    }
+
+    /// @notice Alias used by ThirdWeb-style integrations.
+    function isPublicSaleActive() external view returns (bool) {
+        return bankrbotEnabled && totalMinted < MAX_SUPPLY;
+    }
+
     // ── Admin ─────────────────────────────────────────────────────────────────
 
     /// @notice Update the Uniswap V4 pool key used for CLAWDIA swaps.

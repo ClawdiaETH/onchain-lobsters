@@ -5,7 +5,7 @@ interface Props {
   params: { tokenId: string };
 }
 
-const CONTRACT = "0xE1C8D0478eBa91541A8F3f62C7F74b650dbEA9EE";
+const CONTRACT = "0xccdC728B100F135d85340184313bCba68456dEaa";
 
 // Dynamic OG tags per token — Twitter and Farcaster crawlers read these
 // before any redirect, giving each token its own share card image.
