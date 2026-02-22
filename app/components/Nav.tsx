@@ -20,18 +20,19 @@ export default function Nav() {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      height: 60,
+      height: 68,
       position: "sticky",
       top: 0,
       zIndex: 100,
-      background: "#050509",
+      background: "#070710",
+      backdropFilter: "blur(8px)",
     }}>
       {/* Logo */}
       <Link href="/" style={{ textDecoration: "none" }}>
-        <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: "#C84820", letterSpacing: "0.18em" }}>
+        <div style={{ fontFamily: MONO, fontSize: 17, fontWeight: 700, color: "#C84820", letterSpacing: "0.18em" }}>
           🦞 ONCHAIN LOBSTERS
         </div>
-        <div style={{ fontFamily: MONO, fontSize: 11, color: "#4A4A6A", letterSpacing: "0.14em", marginTop: 2 }}>
+        <div style={{ fontFamily: MONO, fontSize: 13, color: "#6A6A8A", letterSpacing: "0.14em", marginTop: 3 }}>
           BASE · 8,004 · BURNS $CLAWDIA
         </div>
       </Link>
@@ -44,13 +45,13 @@ export default function Nav() {
           href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
           target="_blank" rel="noreferrer"
           style={{
-            fontFamily: MONO, fontSize: 11, color: "#4A4A6A",
+            fontFamily: MONO, fontSize: 13, color: "#6A6A8A",
             letterSpacing: "0.14em", textDecoration: "none",
             padding: "6px 12px", marginLeft: 8,
             transition: "color 0.15s",
           }}
           onMouseEnter={e => (e.currentTarget.style.color = "#8888A8")}
-          onMouseLeave={e => (e.currentTarget.style.color = "#4A4A6A")}
+          onMouseLeave={e => (e.currentTarget.style.color = "#6A6A8A")}
         >
           CONTRACT ↗
         </a>
@@ -59,7 +60,7 @@ export default function Nav() {
           onMouseEnter={() => setHov(true)}
           onMouseLeave={() => setHov(false)}
           style={{
-            fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em",
+            fontFamily: MONO, fontSize: 13, letterSpacing: "0.14em",
             padding: "7px 16px", marginLeft: 4,
             background: isConnected ? "rgba(200,72,32,0.12)" : hov ? "#0E0E1E" : "transparent",
             color: isConnected ? "#C84820" : hov ? "#E8E8F2" : "#8888A8",
@@ -83,7 +84,7 @@ function NavLink({ href, children }: { href: string; children: string }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em",
+        fontFamily: MONO, fontSize: 13, letterSpacing: "0.16em",
         color: hov ? "#E8E8F2" : "#8888A8",
         textDecoration: "none", padding: "6px 14px",
         border: `1px solid ${hov ? "#282840" : "transparent"}`,

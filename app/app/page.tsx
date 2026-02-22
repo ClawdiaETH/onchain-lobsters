@@ -75,6 +75,7 @@ export default async function HomePage() {
           display: "flex", flexDirection: "column", justifyContent: "center",
           padding: "60px 48px 60px 40px",
           borderRight: "1px solid #1A1A2E",
+          background: "radial-gradient(ellipse at 30% 40%, rgba(200,72,32,0.07) 0%, transparent 65%)",
         }}>
           {/* Big pixel headline */}
           <h1 style={{
@@ -94,9 +95,9 @@ export default async function HomePage() {
           {/* Description */}
           <p style={{
             fontFamily: "'Courier New', monospace",
-            fontSize: 12, color: "#8888A8", lineHeight: 1.9,
-            margin: "0 0 36px 0", letterSpacing: "0.06em",
-            maxWidth: 340,
+            fontSize: 15, color: "#9090B0", lineHeight: 1.9,
+            margin: "0 0 36px 0", letterSpacing: "0.04em",
+            maxWidth: 360,
           }}>
             8,004 generative pixel lobsters. Every sprite lives onchain.
             Minting burns $CLAWDIA forever. Commit-reveal randomness. No IPFS.
@@ -124,7 +125,7 @@ export default async function HomePage() {
           <div style={{
             display: "flex", gap: 24, flexWrap: "wrap",
             fontFamily: "'Courier New', monospace",
-            fontSize: 11, color: "#4A4A6A", letterSpacing: "0.12em",
+            fontSize: 14, color: "#6A6A8A", letterSpacing: "0.1em",
           }}>
             <span><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{MINT_PRICE_ETH}</span> ETH</span>
             <span>·</span>
@@ -162,7 +163,7 @@ export default async function HomePage() {
           <div key={stat.label} style={{ textAlign: "center" }}>
             <div style={{
               fontFamily: "'Courier New', monospace",
-              fontSize: 10, color: "#4A4A6A", letterSpacing: "0.18em", marginBottom: 4,
+              fontSize: 12, color: "#6A6A8A", letterSpacing: "0.18em", marginBottom: 4,
             }}>
               {stat.label}
             </div>

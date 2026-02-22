@@ -30,16 +30,20 @@ const C = {
   errorBord:  "#3A1010",
 };
 
-// ─── Cycle random preview traits ─────────────────────────────────────────────
+// ─── Full 64-bit random seed — covers ALL trait bytes (0–7) ──────────────────
+// Traits use bytes 0-7 of the seed: eyes=byte4, accessory=byte5, tail=byte6,
+// brokenAntenna/special=byte7. A 32-bit seed locks all those to index 0
+// (every preview = Ghost special, no accessory, broken antenna). Fix: 64-bit.
+function rand64(): bigint {
+  const hi = BigInt(Math.floor(Math.random() * 0x100000000)) << 32n;
+  const lo = BigInt(Math.floor(Math.random() * 0x100000000));
+  return hi | lo;
+}
+
 function useRandomTraits(): Traits {
-  const [traits, setTraits] = useState<Traits>(() =>
-    seedToTraits(BigInt(Math.floor(Math.random() * 0xFFFFFFFF)))
-  );
+  const [traits, setTraits] = useState<Traits>(() => seedToTraits(rand64()));
   useEffect(() => {
-    const iv = setInterval(
-      () => setTraits(seedToTraits(BigInt(Math.floor(Math.random() * 0xFFFFFFFF)))),
-      2200
-    );
+    const iv = setInterval(() => setTraits(seedToTraits(rand64())), 1800);
     return () => clearInterval(iv);
   }, []);
   return traits;
