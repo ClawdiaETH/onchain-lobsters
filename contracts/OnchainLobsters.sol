@@ -46,7 +46,11 @@ interface IPoolManager {
     function unlock(bytes calldata data) external returns (bytes memory);
     function swap(PoolKey calldata key, SwapParams calldata params, bytes calldata hookData)
         external returns (int256 delta);                    // BalanceDelta as int256
-    function settle() external payable returns (uint256);
+    /// @dev For ERC20: call sync(currency) first, transfer tokens, then settle(currency).
+    function settle(address currency) external payable returns (uint256);
+    /// @dev Snapshots PoolManager's current balance of `currency` before an ERC20 transfer.
+    ///      Must be called before transferring ERC20 tokens and before settle(currency).
+    function sync(address currency) external;
     function take(address currency, address to, uint256 amount) external;
 }
 
@@ -240,12 +244,14 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
             amount1 := signextend(15, delta) // sign-extend lower 128 bits
         }
 
-        // Settle WETH debt: transfer WETH to PoolManager, then call settle()
+        // Settle WETH debt: sync snapshot → transfer WETH → settle(WETH)
+        // V4 ERC20 settle requires sync() before transfer so PoolManager can diff balances.
         if (amount0 < 0) {
             uint256 wethOwed = uint256(uint128(-amount0));
+            IPoolManager(POOL_MANAGER).sync(WETH);              // snapshot before transfer
             bool ok = IERC20(WETH).transfer(POOL_MANAGER, wethOwed);
             require(ok, "WETH transfer failed");
-            IPoolManager(POOL_MANAGER).settle();
+            IPoolManager(POOL_MANAGER).settle(WETH);            // diff = amount transferred
         }
 
         // Take CLAWDIA from PoolManager
