@@ -336,10 +336,8 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
             '"fee_recipient":"0xf17b5dD382B048Ff4c05c1C9e4E24cfC5C6adAd9"',
             '}'
         );
-        return string(abi.encodePacked(
-            "data:application/json;base64,",
-            Base64.encode(json)
-        ));
+        // Raw JSON data URI — no outer Base64 needed, halves gas vs base64(json)
+        return string(abi.encodePacked("data:application/json,", json));
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -347,15 +345,15 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         TraitDecode.Traits memory t = TraitDecode.decode(tokenSeed[tokenId]);
         string memory svg   = IPixelRenderer(renderer).render(t);
         string memory attrs = TraitDecode.attributes(t);
+        // Raw JSON wrapper (no outer Base64) — eliminates ~100M gas of Base64.encode(50KB json).
+        // SVG stays base64-encoded; JSON is returned as raw UTF-8 data URI which OpenSea supports.
         return string(abi.encodePacked(
-            "data:application/json;base64,",
-            Base64.encode(bytes(string(abi.encodePacked(
-                '{"name":"Onchain Lobster #', _str(tokenId),
-                '","description":"8,004 fully onchain pixel lobsters. Minted with $CLAWDIA on Base. Commit-reveal. No IPFS. CC0.",',
-                '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(svg)), '",',
-                '"attributes":', attrs,
-                '}'
-            ))))
+            'data:application/json,',
+            '{"name":"Onchain Lobster #', _str(tokenId),
+            '","description":"8,004 fully onchain pixel lobsters. Minted with $CLAWDIA on Base. Commit-reveal. No IPFS. CC0.",',
+            '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(svg)), '",',
+            '"attributes":', attrs,
+            '}'
         ));
     }
 
