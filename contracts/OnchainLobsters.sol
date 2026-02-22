@@ -79,6 +79,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
     uint256 public mintPriceETH;
     uint256 public totalMinted;
     address public treasury;
+    bool    public bankrbotEnabled;
 
     /// @notice Uniswap V4 pool key for WETH/CLAWDIA swap.
     ///         Owner can update if pool migrates or hook changes.
@@ -257,7 +258,71 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         return abi.encode(clawdiaOut);
     }
 
+    // ── Minting (direct — for bankrbot / single-tx callers) ───────────────────
+
+    /// @notice Single-transaction mint for bankrbot and similar callers.
+    ///         Uses block.prevrandao as entropy — slightly less manipulation-resistant
+    ///         than commit-reveal but acceptable for bot-driven flows where minters
+    ///         don't control block timing. Owner can toggle via setBankrbotEnabled().
+    /// @param  recipient Address to receive the NFT.
+    function mintDirect(address recipient) external payable {
+        require(bankrbotEnabled,           "direct mint disabled");
+        require(msg.value >= mintPriceETH, "insufficient ETH");
+        require(totalMinted < MAX_SUPPLY,  "sold out");
+
+        // Refund excess
+        if (msg.value > mintPriceETH) {
+            (bool ok,) = msg.sender.call{value: msg.value - mintPriceETH}("");
+            require(ok, "refund failed");
+        }
+
+        uint256 seed = uint256(keccak256(abi.encodePacked(
+            block.prevrandao,
+            msg.sender,
+            recipient,
+            totalMinted
+        )));
+
+        uint256 burnHalf     = mintPriceETH / 2;
+        uint256 protocolHalf = mintPriceETH - burnHalf;
+        uint256 tokenId      = ++totalMinted;
+
+        uint256 burned = _swapAndBurn(burnHalf);
+        if (burned > 0) emit ClawdiaBurned(tokenId, burned);
+
+        if (protocolHalf > 0 && treasury != address(0)) {
+            (bool ok,) = treasury.call{value: protocolHalf}("");
+            require(ok, "treasury transfer failed");
+        }
+
+        tokenSeed[tokenId] = seed;
+        _mint(recipient, tokenId);
+        emit Revealed(msg.sender, tokenId, seed);
+    }
+
     // ── Metadata ──────────────────────────────────────────────────────────────
+
+    /// @notice EIP-7572 / OpenSea collection-level metadata.
+    ///         Renders a Classic Red / Open Water lobster as the collection image.
+    function contractURI() external view returns (string memory) {
+        // Seed 0xFF00000000000001 → mutation=0 (Classic Red), scene=0 (Open Water),
+        // no broken antenna, no special. Perfect collection image.
+        TraitDecode.Traits memory t = TraitDecode.decode(0xFF00000000000001);
+        string memory svg = IPixelRenderer(RENDERER).render(t);
+        bytes memory json = abi.encodePacked(
+            '{"name":"Onchain Lobsters",',
+            '"description":"8,004 fully onchain pixel lobsters. Minted with $CLAWDIA on Base. Commit-reveal. No IPFS. CC0.",',
+            '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(svg)), '",',
+            '"external_link":"https://onchain-lobsters.vercel.app",',
+            '"seller_fee_basis_points":500,',
+            '"fee_recipient":"0xf17b5dD382B048Ff4c05c1C9e4E24cfC5C6adAd9"',
+            '}'
+        );
+        return string(abi.encodePacked(
+            "data:application/json;base64,",
+            Base64.encode(json)
+        ));
+    }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
@@ -268,7 +333,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
             "data:application/json;base64,",
             Base64.encode(bytes(string(abi.encodePacked(
                 '{"name":"Onchain Lobster #', _str(tokenId),
-                '","description":"Fully onchain pixel lobster. Mined with $CLAWDIA on Base.",',
+                '","description":"8,004 fully onchain pixel lobsters. Minted with $CLAWDIA on Base. Commit-reveal. No IPFS. CC0.",',
                 '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(svg)), '",',
                 '"attributes":', attrs,
                 '}'
@@ -285,6 +350,11 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         clawdiaPoolKey.tickSpacing = tickSpacing;
         clawdiaPoolKey.hooks       = hooks;
         emit PoolKeyUpdated(fee, tickSpacing, hooks);
+    }
+
+    /// @notice Enable or disable the bankrbot-compatible direct mint path.
+    function setBankrbotEnabled(bool enabled) external onlyOwner {
+        bankrbotEnabled = enabled;
     }
 
     function setMintPrice(uint256 _price) external onlyOwner {

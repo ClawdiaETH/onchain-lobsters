@@ -289,4 +289,120 @@ contract OnchainLobstersTest is Test {
         vm.expectRevert();
         nft.tokenURI(999);
     }
+
+    // ─── Fee Routing ──────────────────────────────────────────────────────────
+
+    /// @notice After commit+reveal, 100% of mintPriceETH reaches the treasury.
+    ///         In the test environment the PoolManager has no code, so _swapAndBurn
+    ///         falls back via _sendToTreasury, meaning BOTH halves land at treasury.
+    function test_fee_routing() public {
+        uint256 before = treasury.balance;
+
+        bytes32 salt = keccak256("fee-routing-test");
+        bytes32 commitment = keccak256(abi.encodePacked(salt, user));
+        vm.prank(user);
+        nft.commit{value: MINT_PRICE}(commitment);
+
+        vm.roll(block.number + 2);
+        vm.prank(user);
+        nft.reveal(salt, user);
+
+        // In test env (no PoolManager): burnHalf goes to treasury via fallback + protocolHalf
+        // goes directly — total = mintPriceETH
+        assertEq(treasury.balance - before, MINT_PRICE, "treasury did not receive full mint price");
+    }
+
+    /// @notice Confirm treasury address is set correctly and ETH routing uses it.
+    function test_fee_routing_treasury_address() public {
+        assertEq(nft.treasury(), address(0xFEED), "treasury mismatch");
+    }
+
+    // ─── Direct Mint (bankrbot) ───────────────────────────────────────────────
+
+    function test_mintDirect_disabledByDefault() public {
+        vm.prank(user);
+        vm.expectRevert("direct mint disabled");
+        nft.mintDirect{value: MINT_PRICE}(user);
+    }
+
+    function test_mintDirect_happyPath() public {
+        nft.setBankrbotEnabled(true);
+
+        uint256 treasuryBefore = treasury.balance;
+        vm.prank(user);
+        nft.mintDirect{value: MINT_PRICE}(user);
+
+        assertEq(nft.totalMinted(), 1, "totalMinted should be 1");
+        assertEq(nft.ownerOf(1), user, "user should own token 1");
+        // In test env: both halves go to treasury
+        assertEq(treasury.balance - treasuryBefore, MINT_PRICE, "treasury did not receive full mint price");
+    }
+
+    function test_mintDirect_feeRouting() public {
+        nft.setBankrbotEnabled(true);
+        uint256 before = treasury.balance;
+
+        vm.prank(user);
+        nft.mintDirect{value: MINT_PRICE}(user);
+
+        assertEq(treasury.balance - before, MINT_PRICE, "mintDirect: treasury did not receive full mint price");
+    }
+
+    function test_mintDirect_overpayRefunded() public {
+        nft.setBankrbotEnabled(true);
+        uint256 before = user.balance;
+
+        vm.prank(user);
+        nft.mintDirect{value: MINT_PRICE + 0.1 ether}(user);
+
+        assertApproxEqAbs(user.balance, before - MINT_PRICE, 1e6, "excess not refunded");
+    }
+
+    function test_mintDirect_insufficientETH() public {
+        nft.setBankrbotEnabled(true);
+        vm.prank(user);
+        vm.expectRevert("insufficient ETH");
+        nft.mintDirect{value: MINT_PRICE - 1}(user);
+    }
+
+    // ─── OpenSea / ERC-165 ────────────────────────────────────────────────────
+
+    function test_supportsInterface_ERC721() public view {
+        // ERC-721 interface ID
+        assertTrue(nft.supportsInterface(0x80ac58cd), "should support ERC721");
+    }
+
+    function test_supportsInterface_ERC721Metadata() public view {
+        // ERC-721Metadata interface ID
+        assertTrue(nft.supportsInterface(0x5b5e139f), "should support ERC721Metadata");
+    }
+
+    function test_contractURI_returnsBase64JSON() public view {
+        string memory uri = nft.contractURI();
+        bytes memory b = bytes(uri);
+        // Must start with "data:application/json;base64,"
+        assertEq(b[0],  'd');
+        assertEq(b[4],  ':');
+        assertEq(b[17], 'j'); // "json"
+        assertEq(b[28], ','); // comma before base64 payload
+        assertTrue(b.length > 200, "contractURI too short");
+    }
+
+    function test_transferEvent_fromZero() public {
+        bytes32 salt = keccak256("transfer-event-test");
+        bytes32 commitment = keccak256(abi.encodePacked(salt, user));
+        vm.prank(user);
+        nft.commit{value: MINT_PRICE}(commitment);
+        vm.roll(block.number + 2);
+
+        // ERC-721 Transfer event: Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
+        vm.expectEmit(true, true, true, false);
+        emit Transfer(address(0), user, 1);
+
+        vm.prank(user);
+        nft.reveal(salt, user);
+    }
+
+    // Declare Transfer event to use with expectEmit
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 }
