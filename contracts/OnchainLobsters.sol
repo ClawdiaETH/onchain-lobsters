@@ -284,9 +284,14 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
     ///         don't control block timing. Owner can toggle via setBankrbotEnabled().
     /// @param  recipient Address to receive the NFT.
     function mintDirect(address recipient) external payable {
-        require(bankrbotEnabled,           "direct mint disabled");
         require(msg.value >= mintPriceETH, "insufficient ETH");
-        require(totalMinted < MAX_SUPPLY,  "sold out");
+        _directMint(recipient);
+    }
+
+    /// @dev Core single-mint logic shared by mintDirect and mintSeaDrop.
+    function _directMint(address recipient) internal {
+        require(bankrbotEnabled,          "direct mint disabled");
+        require(totalMinted < MAX_SUPPLY, "sold out");
 
         // Refund excess
         if (msg.value > mintPriceETH) {
@@ -370,6 +375,43 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
     /// @notice Alias used by ThirdWeb-style integrations.
     function isPublicSaleActive() external view returns (bool) {
         return bankrbotEnabled && totalMinted < MAX_SUPPLY;
+    }
+
+    // ── SeaDrop-compatible interface (for Bankrbot mint detection) ────────────
+
+    struct PublicDrop {
+        uint80 mintPrice;
+        uint48 startTime;
+        uint48 endTime;
+        uint16 maxTotalMintableByWallet;
+        uint16 feeBps;
+        bool   restrictFeeRecipients;
+    }
+
+    /// @notice SeaDrop-style drop status view. Bankrbot calls this to check if
+    ///         minting is open before attempting a transaction.
+    function getPublicDrop(address) external view returns (PublicDrop memory) {
+        if (!bankrbotEnabled || totalMinted >= MAX_SUPPLY) {
+            return PublicDrop(0, 0, 0, 0, 0, false);
+        }
+        return PublicDrop({
+            mintPrice:                uint80(mintPriceETH),
+            startTime:                uint48(1704067200), // 2024-01-01 — already live
+            endTime:                  uint48(4102444800), // 2100-01-01 — effectively forever
+            maxTotalMintableByWallet: uint16(100),
+            feeBps:                   uint16(0),
+            restrictFeeRecipients:    false
+        });
+    }
+
+    /// @notice SeaDrop-compatible mint entry point. Bankrbot calls this after
+    ///         confirming getPublicDrop() shows an active drop.
+    ///         quantity must be 1 — we enforce single-mint to match our commit-reveal UX.
+    function mintSeaDrop(address minter, uint256 quantity) external payable {
+        require(quantity == 1, "mint one at a time");
+        require(msg.value >= mintPriceETH, "insufficient ETH");
+        address recipient = minter != address(0) ? minter : msg.sender;
+        _directMint(recipient);
     }
 
     // ── Admin ─────────────────────────────────────────────────────────────────
