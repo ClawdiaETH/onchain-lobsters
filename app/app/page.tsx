@@ -2,19 +2,30 @@ import Link from "next/link";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import GalleryGrid from "@/components/GalleryGrid";
+import HeroMosaic from "@/components/HeroMosaic";
 import { CONTRACT_ADDRESS, LOBSTERS_ABI, MINT_PRICE_ETH, MAX_SUPPLY } from "@/constants";
 import { seedToTraits } from "@/lib/traits";
 import { renderLobsterSVG } from "@/lib/renderer";
 
 export const revalidate = 60;
 
-// Diverse preset seeds for hero grid (covers all mutations + specials visually)
+// 60 diverse preset seeds — covers all 8 mutations, specials, varied scenes + accessories
 const PRESET_SEEDS: bigint[] = [
   0x1A2B3C4D5E6F7089n, 0x9876543210ABCDEFn, 0x2468ACE02468ACE0n, 0xFEDCBA9876543210n,
   0x0F1E2D3C4B5A6978n, 0x80706050A0302010n, 0xAABBCCDD11223344n, 0x5566778899AABBCCn,
   0x1357924601234567n, 0xDEADBEEF12345678n, 0x0102030405060708n, 0xF0E0D0C0B0A09080n,
   0x1234ABCD5678EF90n, 0x9ABC1234DEF05678n, 0x0011223344556677n, 0x8899AABBCCDDEEFFn,
   0x3141592653589793n, 0x2718281828459045n, 0x1618033988749894n, 0x1414213562373095n,
+  0xA1B2C3D4E5F60718n, 0x5A4B3C2D1E0F9807n, 0xCAFEBABE12345678n, 0xDEADC0DEBEEF1234n,
+  0x0BADCAFE87654321n, 0x600DC0DE00000000n, 0xABCDEF0123456789n, 0xFEDCBA0987654321n,
+  0x0123456789ABCDEFn, 0x1111111122222222n, 0x3333333344444444n, 0x5555555566666666n,
+  0x7777777788888888n, 0x9999999900000000n, 0xAAAAAAAABBBBBBBBn, 0xCCCCCCCCDDDDDDDDn,
+  0xEEEEEEEEFFFFFFFFn, 0x0F0F0F0FF0F0F0F0n, 0x1234567887654321n, 0xABCDEFEFCDAB0123n,
+  0x246813579ABCDEF0n, 0xF1E2D3C4B5A69780n, 0x0A1B2C3D4E5F6789n, 0x9870123456ABCDEFn,
+  0x1122334455667788n, 0x99AABBCCDDEEFF00n, 0xFEEDFACECAFED00Dn, 0xC0FFEE0123456789n,
+  0xDEAF00DBEEFDEAD0n, 0x1234FEDC5678BA98n, 0xA0B1C2D3E4F50617n, 0x7061504030201000n,
+  0xF0CACC1A00ABCF12n, 0x314159265358979Dn, 0x161803398874989An, 0x271828182845904Bn,
+  0x577215664901532Cn, 0x302775637731670Dn, 0x693147180559945Fn, 0x424242424242424En,
 ];
 
 async function getTotalMinted(): Promise<number> {
@@ -46,11 +57,9 @@ export default async function HomePage() {
   const total = await getTotalMinted();
   const seeds = await getAllSeeds(total);
 
-  // Hero grid: use real minted lobsters, pad with presets if needed
-  const heroSeeds = seeds.length >= 20
-    ? seeds.slice(0, 20)
-    : [...seeds, ...PRESET_SEEDS].slice(0, 20);
-  const heroSVGs = heroSeeds.map(s => svgToDataUrl(renderLobsterSVG(seedToTraits(s), 10)));
+  // Pool: real minted lobsters first, fill with presets up to 60 total for shuffle variety
+  const poolSeeds = [...seeds, ...PRESET_SEEDS].slice(0, 60);
+  const svgPool = poolSeeds.map(s => svgToDataUrl(renderLobsterSVG(seedToTraits(s), 10)));
 
   return (
     <>
@@ -58,7 +67,7 @@ export default async function HomePage() {
       <section style={{
         display: "grid",
         gridTemplateColumns: "42% 58%",
-        minHeight: "calc(100vh - 120px)",
+        height: "calc(100vh - 120px)",
         overflow: "hidden",
       }}>
         {/* Left — headline + CTA */}
@@ -125,30 +134,9 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Right — NFT mosaic */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gridTemplateRows: "repeat(5, 1fr)",
-          gap: 3,
-          background: "#0A0A14",
-          padding: 3,
-        }}>
-          {heroSVGs.map((src, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={src}
-              alt={`Lobster #${i + 1}`}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                imageRendering: "pixelated",
-                display: "block",
-              }}
-            />
-          ))}
+        {/* Right — shuffling NFT mosaic (client component) */}
+        <div style={{ height: "100%", overflow: "hidden" }}>
+          <HeroMosaic svgPool={svgPool} cols={4} rows={5} />
         </div>
       </section>
 
