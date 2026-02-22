@@ -3,7 +3,7 @@ import { parseAbi } from "viem";
 export const CHAIN_ID = 8453; // Base Mainnet
 export const CHAIN_ID_TESTNET = 84532; // Base Sepolia
 
-export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "0xbe37D95aAa5C624F0fd3549c0CAD88F9E876C660") as `0x${string}`;
+export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "0x048DB74332e5CFB7AC5Ae9CB8B6727dd79b4336D") as `0x${string}`;
 export const CLAWDIA_ADDRESS = "0xbbd9aDe16525acb4B336b6dAd3b9762901522B07" as `0x${string}`;
 export const TREASURY_ADDRESS = "0xf17b5dD382B048Ff4c05c1C9e4E24cfC5C6adAd9" as `0x${string}`;
 

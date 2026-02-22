@@ -73,7 +73,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
 
     // ── Immutables ────────────────────────────────────────────────────────────
     address public immutable CLAWDIA;
-    address public immutable RENDERER;
+    address public renderer;
 
     // ── State ─────────────────────────────────────────────────────────────────
     uint256 public mintPriceETH;
@@ -109,7 +109,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         CLAWDIA      = _clawdia;
         mintPriceETH = _mintPriceETH;
         treasury     = _treasury;
-        RENDERER     = _renderer;
+        renderer     = _renderer;
 
         // Default pool key: WETH/CLAWDIA, 1% static fee, tickSpacing=200
         // Clanker feeStaticHook on Base — update if wrong via setPoolKey()
@@ -308,7 +308,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         // Seed 0xFF00000000000001 → mutation=0 (Classic Red), scene=0 (Open Water),
         // no broken antenna, no special. Perfect collection image.
         TraitDecode.Traits memory t = TraitDecode.decode(0xFF00000000000001);
-        string memory svg = IPixelRenderer(RENDERER).render(t);
+        string memory svg = IPixelRenderer(renderer).render(t);
         bytes memory json = abi.encodePacked(
             '{"name":"Onchain Lobsters",',
             '"description":"8,004 fully onchain pixel lobsters. Minted with $CLAWDIA on Base. Commit-reveal. No IPFS. CC0.",',
@@ -327,7 +327,7 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
         TraitDecode.Traits memory t = TraitDecode.decode(tokenSeed[tokenId]);
-        string memory svg   = IPixelRenderer(RENDERER).render(t);
+        string memory svg   = IPixelRenderer(renderer).render(t);
         string memory attrs = TraitDecode.attributes(t);
         return string(abi.encodePacked(
             "data:application/json;base64,",
@@ -350,6 +350,11 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         clawdiaPoolKey.tickSpacing = tickSpacing;
         clawdiaPoolKey.hooks       = hooks;
         emit PoolKeyUpdated(fee, tickSpacing, hooks);
+    }
+
+    /// @notice Point to a new pixel renderer (e.g. after a visual fix) without redeploying this contract.
+    function setRenderer(address _renderer) external onlyOwner {
+        renderer = _renderer;
     }
 
     /// @notice Enable or disable the bankrbot-compatible direct mint path.

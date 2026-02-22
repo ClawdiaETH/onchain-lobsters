@@ -617,5 +617,5 @@ export function renderLobsterSVG(traits: Traits, scale = 10): string {
   }
 
   const vw = W * scale, vh = H * scale;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" shape-rendering="crispEdges">${rects.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" shape-rendering="crispEdges" style="image-rendering:pixelated;image-rendering:crisp-edges">${rects.join('')}</svg>`;
 }
