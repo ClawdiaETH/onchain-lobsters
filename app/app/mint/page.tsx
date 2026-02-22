@@ -327,10 +327,10 @@ export default function MintPage() {
             <div>
               <div style={{ marginBottom: 20 }}>
                 {[
-                  `PAY ${MINT_PRICE_ETH} ETH`,
+                  `SIGN #1 — PAY ${MINT_PRICE_ETH} ETH (COMMIT)`,
                   "HALF SWAPS TO $CLAWDIA + BURNS",
-                  "WAIT 1-100 BLOCKS",
-                  "REVEAL YOUR LOBSTER",
+                  "WAIT 1-100 BLOCKS (ANTI-FRONTRUN)",
+                  "SIGN #2 — REVEAL YOUR LOBSTER",
                 ].map((step, i) => (
                   <div key={i} style={{
                     display: "flex", alignItems: "center", gap: 12,
@@ -360,19 +360,25 @@ export default function MintPage() {
                 onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
               >
-                COMMIT + BURN → MINT
+                MINT (SIGNATURE 1 OF 2)
               </button>
             </div>
           )}
 
           {/* COMMITTING */}
           {address && phase === "committing" && (
-            <SpinnerPanel label="COMMITTING..." sub="Confirm in your wallet" />
+            <SpinnerPanel label="COMMITTING..." sub="Signature 1 of 2 — confirm in your wallet" />
           )}
 
           {/* WAITING */}
           {address && phase === "waiting" && pending && !isWrongChain && (
             <div>
+              <div style={{
+                fontFamily: MONO, fontSize: 11, color: C.textMuted,
+                letterSpacing: "0.08em", marginBottom: 12, lineHeight: 1.6,
+              }}>
+                ✓ SIGNATURE 1 DONE · WAITING FOR BLOCKS · SIGNATURE 2 WILL REVEAL YOUR LOBSTER
+              </div>
               <div style={{
                 fontFamily: MONO, fontSize: 12, color: C.textSec,
                 letterSpacing: "0.12em", marginBottom: 16,
@@ -428,7 +434,7 @@ export default function MintPage() {
                       transition: "all 0.15s",
                     }}
                   >
-                    {canReveal ? "REVEAL LOBSTER →" : "WAITING FOR BLOCK..."}
+                    {canReveal ? "REVEAL LOBSTER (SIGNATURE 2 OF 2) →" : "WAITING FOR BLOCK..."}
                   </button>
                 </div>
               )}
