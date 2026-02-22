@@ -110,14 +110,15 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         treasury     = _treasury;
         RENDERER     = _renderer;
 
-        // Default pool key: WETH/CLAWDIA, 1% static fee, tickSpacing=200
-        // Clanker feeStaticHook on Base — update if wrong via setPoolKey()
+        // Pool key verified from PoolManager Initialize event (block 41349954):
+        // WETH/CLAWDIA, fee=0x800000 (dynamic fee flag, actual fee set by hook),
+        // tickSpacing=200, Clanker feeStaticHookV2
         clawdiaPoolKey = IPoolManager.PoolKey({
             currency0:   WETH,
             currency1:   _clawdia,
-            fee:         10000,
+            fee:         0x800000, // dynamic fee flag — Clanker V4 hook controls actual rate
             tickSpacing: 200,
-            hooks:       0xDd5EeaFf7BD481AD55Db083062b13a3cdf0A68CC // Clanker feeStaticHook
+            hooks:       0xb429d62f8f3bFFb98CdB9569533eA23bF0Ba28CC // Clanker feeStaticHookV2 on Base
         });
     }
 
