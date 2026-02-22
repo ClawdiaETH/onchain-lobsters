@@ -10,8 +10,8 @@ const CLAWDIA_BURNED_EVENT = parseAbiItem(
   "event ClawdiaBurned(uint256 indexed tokenId, uint256 clawdiaAmount)"
 );
 
-// Contract deploy block — avoid scanning entire chain history.
-const DEPLOY_BLOCK = 42_505_000n;
+// Contract deploy block (v7) — avoid scanning entire chain history.
+const DEPLOY_BLOCK = 42_506_000n;
 
 export function useTotalBurned(): { total: bigint; loading: boolean } {
   const [total, setTotal] = useState<bigint>(0n);
