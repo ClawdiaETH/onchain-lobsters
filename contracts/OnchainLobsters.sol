@@ -115,9 +115,9 @@ contract OnchainLobsters is ERC721, Ownable, IUnlockCallback {
         clawdiaPoolKey = IPoolManager.PoolKey({
             currency0:   WETH,
             currency1:   _clawdia,
-            fee:         10000,
+            fee:         0x800000, // dynamic fee flag — actual fee set by Clanker feeStaticHookV2
             tickSpacing: 200,
-            hooks:       0xDd5EeaFf7BD481AD55Db083062b13a3cdf0A68CC // Clanker feeStaticHook
+            hooks:       0xb429d62f8f3bFFb98CdB9569533eA23bF0Ba28CC // Clanker feeStaticHookV2 on Base
         });
     }
 
