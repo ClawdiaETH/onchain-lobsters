@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, usePublicClient, useChainId, useSwitchChain } from "wagmi";
+import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
 import { base } from "wagmi/chains";
 import LobsterCanvas from "@/components/LobsterCanvas";
 import TraitSheet from "@/components/TraitSheet";
@@ -79,10 +79,9 @@ function SpinnerPanel({ label, sub, color = C.accent }: { label: string; sub: st
 }
 
 export default function MintPage() {
-  const { address } = useAccount();
-  const chainId = useChainId();
+  const { address, chain } = useAccount();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
-  const isWrongChain = !!address && chainId !== base.id;
+  const isWrongChain = !!address && chain?.id !== base.id;
   const publicClient = usePublicClient();
   const randomTraits = useRandomTraits();
   const pending = usePendingCommit(address);
