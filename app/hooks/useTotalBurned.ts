@@ -22,7 +22,7 @@ export function useTotalBurned(): { total: bigint; loading: boolean } {
 
     async function fetch() {
       try {
-        const client = createPublicClient({ chain: base, transport: http() });
+        const client = createPublicClient({ chain: base, transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL) });
         const logs = await client.getLogs({
           address: CONTRACT_ADDRESS,
           event: CLAWDIA_BURNED_EVENT,

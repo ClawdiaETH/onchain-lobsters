@@ -31,7 +31,7 @@ const SPECIAL_NAMES   = ["","Ghost","Infernal","Celestial","Nounish","Doodled"];
 
 async function getTokenData(tokenId: number) {
   try {
-    const client = createPublicClient({ chain: base, transport: http() });
+    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
     const seed = (await client.readContract({
       address: CONTRACT_ADDRESS,
       abi: LOBSTERS_ABI,

@@ -19,7 +19,7 @@ export async function GET(
   }
 
   try {
-    const client = createPublicClient({ chain: base, transport: http() });
+    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
     const seed = (await client.readContract({
       address: CONTRACT_ADDRESS,
       abi: LOBSTERS_ABI,
