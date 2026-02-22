@@ -590,9 +590,16 @@ export function drawToCanvas(canvas: HTMLCanvasElement | null, traits: Traits) {
 }
 
 // ─── SVG output (server-safe, mirrors PixelRenderer.sol _bufToSVG) ──────────
+// One <path fill="#RRGGBB" d="..."/> per unique color.
+// Each horizontal run emits M{px},{py}h{pw}v{scale}h-{pw}z — ~18 chars vs ~65 for a <rect fill=.../>.
+// Reduces SVG from ~33KB to ~8KB, matching the Solidity two-pass algorithm.
 export function renderLobsterSVG(traits: Traits, scale = 10): string {
   const buf = renderLobster(traits);
-  const rects: string[] = [];
+  const hex = (n: number) => n.toString(16).padStart(2, '0').toUpperCase();
+
+  // Single pass: group run-length encoded pixels by color (Map preserves insertion order,
+  // matching Solidity's first-appearance palette ordering).
+  const colorPaths = new Map<string, string>();
 
   for (let y = 0; y < H; y++) {
     let x = 0;
@@ -600,22 +607,26 @@ export function renderLobsterSVG(traits: Traits, scale = 10): string {
       const i = (y * W + x) * 4;
       if (buf[i + 3] === 0) { x++; continue; } // transparent
       const r = buf[i], g = buf[i + 1], b = buf[i + 2];
-      const hex = (n: number) => n.toString(16).padStart(2, '0').toUpperCase();
       const color = `${hex(r)}${hex(g)}${hex(b)}`;
-      // Run-length encode same-color neighbours
+      // Extend run
       let run = 1;
       while (x + run < W) {
         const j = (y * W + x + run) * 4;
         if (buf[j + 3] === 0 || buf[j] !== r || buf[j + 1] !== g || buf[j + 2] !== b) break;
         run++;
       }
-      rects.push(
-        `<rect x="${x * scale}" y="${y * scale}" width="${run * scale}" height="${scale}" fill="#${color}"/>`
-      );
+      const pw = run * scale;
+      const cmd = `M${x * scale},${y * scale}h${pw}v${scale}h-${pw}z`;
+      colorPaths.set(color, (colorPaths.get(color) ?? '') + cmd);
       x += run;
     }
   }
 
+  const paths: string[] = [];
+  for (const [color, d] of colorPaths) {
+    paths.push(`<path fill="#${color}" d="${d}"/>`);
+  }
+
   const vw = W * scale, vh = H * scale;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${vw * 3}" height="${vh * 3}" viewBox="0 0 ${vw} ${vh}" shape-rendering="crispEdges" style="image-rendering:pixelated;image-rendering:crisp-edges">${rects.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${vw * 3}" height="${vh * 3}" viewBox="0 0 ${vw} ${vh}" shape-rendering="crispEdges" style="image-rendering:pixelated;image-rendering:crisp-edges">${paths.join('')}</svg>`;
 }
