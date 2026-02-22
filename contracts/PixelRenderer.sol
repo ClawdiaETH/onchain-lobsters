@@ -476,7 +476,7 @@ contract PixelRenderer {
     // ─── Buffer → SVG ────────────────────────────────────────────────────────
     function _bufToSVG(uint24[] memory buf) private pure returns (string memory) {
         bytes memory out = abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" shape-rendering="crispEdges" style="image-rendering:pixelated;image-rendering:crisp-edges">'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="520" viewBox="0 0 400 520" shape-rendering="crispEdges" style="image-rendering:pixelated;image-rendering:crisp-edges">'
         );
 
         for (uint256 y = 0; y < H; y++) {
