@@ -257,13 +257,11 @@ export default function MiniPage() {
       }
 
       setTokenId(mintedId);
-      // Fetch seed to render minted lobster locally
-      publicClient.readContract({
-        address: CONTRACT_ADDRESS,
-        abi: LOBSTERS_ABI,
-        functionName: "tokenSeed",
-        args: [mintedId],
-      }).then((s) => setMintedSeed(s as bigint)).catch(() => {});
+      // Extract seed directly from the Revealed event
+      const seed = logs[0]?.args?.seed;
+      if (seed !== undefined) {
+        setMintedSeed(seed);
+      }
       setMintState("success");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

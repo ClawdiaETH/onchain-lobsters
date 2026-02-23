@@ -11,14 +11,14 @@ export function formatClawdia(raw: bigint): string {
   const whole = raw / 10n ** DECIMALS;
 
   if (whole >= MILLION) {
-    const scaled = (whole * 100n) / MILLION;
+    const scaled = (whole * 100n + MILLION / 2n) / MILLION;
     const int = scaled / 100n;
     const dec = scaled % 100n;
     return `${int}.${dec.toString().padStart(2, "0")}M`;
   }
 
   if (whole >= THOUSAND) {
-    const scaled = (whole * 10n) / THOUSAND;
+    const scaled = (whole * 10n + THOUSAND / 2n) / THOUSAND;
     const int = scaled / 10n;
     const dec = scaled % 10n;
     return `${int}.${dec}K`;
