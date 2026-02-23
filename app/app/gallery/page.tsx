@@ -18,13 +18,7 @@ export default async function GalleryPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#070710" }}>
       {/* Page header */}
-      <div style={{
-        borderBottom: "1px solid #1A1A2E",
-        padding: "24px 28px 20px",
-        display: "flex",
-        alignItems: "baseline",
-        justifyContent: "space-between",
-      }}>
+      <div className="gallery-header">
         <div>
           <div style={{ fontFamily: MONO, fontSize: 18, color: "#E8E8F2", letterSpacing: "0.16em", fontWeight: 700 }}>
             GALLERY

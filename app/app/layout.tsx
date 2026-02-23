@@ -1,4 +1,5 @@
 "use client";
+import "./globals.css";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Onchain Lobsters — Minted with $CLAWDIA</title>
         <meta name="description" content="8,004 fully onchain pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Commit-reveal. No IPFS." />
 

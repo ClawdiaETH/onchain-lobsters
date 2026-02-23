@@ -1,0 +1,13 @@
+{
+  "transactions": [
+    {
+      "rpc": "https://edge.goldsky.com/standard/evm/8453?secret=gs_edge_cmlu0inxe7q4t01ud378l92u4"
+    },
+    {
+      "rpc": "https://edge.goldsky.com/standard/evm/8453?secret=gs_edge_cmlu0inxe7q4t01ud378l92u4"
+    },
+    {
+      "rpc": "https://edge.goldsky.com/standard/evm/8453?secret=gs_edge_cmlu0inxe7q4t01ud378l92u4"
+    }
+  ]
+}

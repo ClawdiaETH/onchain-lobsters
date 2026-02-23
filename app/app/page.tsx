@@ -43,19 +43,9 @@ export default async function HomePage() {
   return (
     <>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{
-        display: "grid",
-        gridTemplateColumns: "42% 58%",
-        height: "calc(100vh - 120px)",
-        overflow: "hidden",
-      }}>
+      <section className="hero-grid">
         {/* Left — headline + CTA */}
-        <div style={{
-          display: "flex", flexDirection: "column", justifyContent: "center",
-          padding: "60px 48px 60px 40px",
-          borderRight: "1px solid #1A1A2E",
-          background: "radial-gradient(ellipse at 30% 40%, rgba(200,72,32,0.07) 0%, transparent 65%)",
-        }}>
+        <div className="hero-left">
           {/* Big pixel headline */}
           <h1 style={{
             fontFamily: "'Press Start 2P', monospace",
@@ -115,22 +105,13 @@ export default async function HomePage() {
         </div>
 
         {/* Right — shuffling NFT mosaic (client component) */}
-        <div style={{ height: "100%", overflow: "hidden" }}>
+        <div className="hero-right">
           <HeroMosaic svgPool={svgPool} cols={4} rows={5} />
         </div>
       </section>
 
       {/* ── STATS BAR ────────────────────────────────────────────────────── */}
-      <div style={{
-        borderTop: "1px solid #1A1A2E",
-        borderBottom: "1px solid #1A1A2E",
-        background: "#07070F",
-        padding: "20px 40px",
-        display: "flex",
-        justifyContent: "center",
-        gap: 48,
-        flexWrap: "wrap",
-      }}>
+      <div className="stats-bar">
         {[
           { label: "MINT PRICE", value: `${MINT_PRICE_ETH} ETH` },
           { label: "SUPPLY",     value: `${MAX_SUPPLY.toLocaleString()}` },
@@ -158,15 +139,7 @@ export default async function HomePage() {
       </div>
 
       {/* ── FEATURES ─────────────────────────────────────────────────────── */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: 1, background: "#1A1A2E",
-        margin: "48px 40px",
-        border: "1px solid #1A1A2E",
-        borderRadius: 4,
-        overflow: "hidden",
-      }}>
+      <div className="features-grid">
         {[
           { icon: "🎨", title: "FULLY ONCHAIN",    body: "Every pixel rendered in Solidity. No IPFS, no external deps, no rugs." },
           { icon: "🔥", title: "BURNS $CLAWDIA",   body: "Half your mint goes to buying and burning $CLAWDIA on Uniswap V4." },

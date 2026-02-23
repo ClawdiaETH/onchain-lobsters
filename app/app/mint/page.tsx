@@ -205,7 +205,7 @@ export default function MintPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: "32px auto", padding: "0 20px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, background: C.border, borderRadius: 6, overflow: "hidden" }}>
+      <div className="mint-grid">
 
         {/* ── LEFT: lobster preview ─────────────────────────────────────── */}
         <div style={{

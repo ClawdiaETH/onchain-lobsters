@@ -50,23 +50,29 @@ export default function Nav() {
       </Link>
 
       {/* Nav links */}
-      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-        <NavLink href="/gallery">GALLERY</NavLink>
-        <NavLink href="/mint">MINT</NavLink>
-        <a
-          href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
-          target="_blank" rel="noreferrer"
-          style={{
-            fontFamily: MONO, fontSize: 13, color: "#6A6A8A",
-            letterSpacing: "0.14em", textDecoration: "none",
-            padding: "6px 12px", marginLeft: 8,
-            transition: "color 0.15s",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#8888A8")}
-          onMouseLeave={e => (e.currentTarget.style.color = "#6A6A8A")}
-        >
-          CONTRACT ↗
-        </a>
+      <div className="nav-links">
+        <span className="nav-link-hide-mobile">
+          <NavLink href="/gallery">GALLERY</NavLink>
+        </span>
+        <span className="nav-link-hide-mobile">
+          <NavLink href="/mint">MINT</NavLink>
+        </span>
+        <span className="nav-link-hide-mobile">
+          <a
+            href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
+            target="_blank" rel="noreferrer"
+            style={{
+              fontFamily: MONO, fontSize: 13, color: "#6A6A8A",
+              letterSpacing: "0.14em", textDecoration: "none",
+              padding: "6px 12px", marginLeft: 8,
+              transition: "color 0.15s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#8888A8")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#6A6A8A")}
+          >
+            CONTRACT ↗
+          </a>
+        </span>
 
         {/* Connect / disconnect button */}
         <div ref={pickerRef} style={{ position: "relative", marginLeft: 4 }}>
