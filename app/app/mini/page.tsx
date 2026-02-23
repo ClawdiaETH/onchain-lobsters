@@ -303,7 +303,7 @@ export default function MiniPage() {
             alt={`Lobster #${tokenId.toString()}`}
             style={styles.lobsterImg}
           />
-          <button style={styles.mintBtn} onClick={handleShare}>
+          <button style={styles.shareBtn} onClick={handleShare}>
             SHARE CAST
           </button>
           <button
