@@ -18,7 +18,7 @@ const config = createConfig({
   chains: [base, mainnet],  // mainnet listed so wagmi doesn't choke on ETH-connected wallets
   connectors: [
     injected(),
-    coinbaseWallet({ appName: "Onchain Lobsters" }),
+    coinbaseWallet({ appName: "Onchain Lobsters", preference: "all" }),
   ],
   transports: {
     [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL),
