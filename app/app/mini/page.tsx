@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import sdk from "@farcaster/frame-sdk";
 import {
   createWalletClient,
@@ -12,10 +12,20 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 import { Attribution } from "ox/erc8021";
-import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY } from "../../constants";
+import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY, LOBSTERS_ABI } from "../../constants";
 import { useTotalBurned } from "@/hooks/useTotalBurned";
-import { useTotalMinted } from "@/hooks/useTotalMinted";
+import LobsterCanvas from "@/components/LobsterCanvas";
+import { seedToTraits } from "@/lib/traits";
 import { formatClawdia } from "@/lib/format";
+
+// Diverse seeds covering all 8 mutations + specials — used for idle preview rotation
+const PREVIEW_SEEDS: bigint[] = [
+  0x1A2B3C4D5E6F7089n, 0x9876543210ABCDEFn, 0x2468ACE02468ACE0n, 0xFEDCBA9876543210n,
+  0x0F1E2D3C4B5A6978n, 0x80706050A0302010n, 0xAABBCCDD11223344n, 0x5566778899AABBCCn,
+  0x3141592653589793n, 0x2718281828459045n, 0xCAFEBABE12345678n, 0xDEADC0DEBEEF1234n,
+  0xA1B2C3D4E5F60718n, 0x5A4B3C2D1E0F9807n, 0xFEEDFACECAFED00Dn, 0xC0FFEE0123456789n,
+  0x246813579ABCDEF0n, 0xF1E2D3C4B5A69780n, 0x1234567887654321n, 0xABCDEFEFCDAB0123n,
+];
 
 // Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
 const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
@@ -169,13 +179,40 @@ export default function MiniPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [mintState, setMintState] = useState<MintState>("idle");
   const [tokenId, setTokenId] = useState<bigint | null>(null);
+  const [mintedSeed, setMintedSeed] = useState<bigint | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const { total: totalMinted } = useTotalMinted();
+  const [totalMinted, setTotalMinted] = useState<number | null>(null);
+  const [previewIdx, setPreviewIdx] = useState(0);
   const { total: burned, loading: burnLoading } = useTotalBurned();
+  const hasMintedRef = useRef(false);
 
   useEffect(() => {
+    let cancelled = false;
     setIsMounted(true);
     sdk.actions.ready().catch(() => {});
+
+    // Rotate preview lobster every 2s
+    const rot = setInterval(() => {
+      setPreviewIdx(i => (i + 1) % PREVIEW_SEEDS.length);
+    }, 2000);
+
+    // Fetch totalMinted once on load (only if RPC URL is configured)
+    const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
+    if (rpcUrl) {
+      const publicClient = createPublicClient({ chain: base, transport: http(rpcUrl) });
+      publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: LOBSTERS_ABI,
+        functionName: "totalMinted",
+      }).then((v) => {
+        if (!cancelled && !hasMintedRef.current) setTotalMinted(Number(v));
+      }).catch(() => {});
+    }
+
+    return () => {
+      cancelled = true;
+      clearInterval(rot);
+    };
   }, []);
 
   const handleMint = useCallback(async () => {
@@ -190,9 +227,12 @@ export default function MiniPage() {
         transport: custom(ethProvider),
       });
 
+      const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
+      if (!rpcUrl) throw new Error("RPC URL not configured");
+
       const publicClient = createPublicClient({
         chain: base,
-        transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL),
+        transport: http(rpcUrl),
       });
 
       // Request accounts from the Farcaster wallet
@@ -230,6 +270,14 @@ export default function MiniPage() {
       }
 
       setTokenId(mintedId);
+      // Extract seed directly from the Revealed event
+      const seed = logs[0]?.args?.seed;
+      if (seed === undefined) {
+        throw new Error("Seed not found in Revealed event");
+      }
+      setMintedSeed(seed);
+      hasMintedRef.current = true;
+      setTotalMinted((prev) => (prev !== null ? prev + 1 : null));
       setMintState("success");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -287,7 +335,7 @@ export default function MiniPage() {
             }}>
               {totalMinted !== null
                 ? <><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{totalMinted.toLocaleString()}</span> / {MAX_SUPPLY.toLocaleString()} MINTED</>
-                : "— / 8,004 MINTED"}
+                : `— / ${MAX_SUPPLY.toLocaleString()} MINTED`}
             </div>
             {!burnLoading && burned > 0n && (
               <div style={{
@@ -299,12 +347,12 @@ export default function MiniPage() {
             )}
           </div>
 
-          <iframe
-            src="https://onchainlobsters.xyz/api/render/1"
-            style={styles.lobsterFrame}
-            scrolling="no"
-            title="Lobster preview"
-          />
+          <div style={styles.lobsterFrame}>
+            <LobsterCanvas
+              traits={seedToTraits(PREVIEW_SEEDS[previewIdx])}
+              size={216}
+            />
+          </div>
           <div style={styles.priceLabel}>Mint price</div>
           <div style={styles.priceValue}>{MINT_PRICE_ETH} ETH</div>
           <button style={styles.mintBtn} onClick={handleMint}>
@@ -327,11 +375,9 @@ export default function MiniPage() {
         <>
           <div style={styles.title}>ONCHAIN LOBSTERS</div>
           <div style={{ ...styles.lobsterFrame, opacity: 0.4 }}>
-            <iframe
-              src="https://onchainlobsters.xyz/api/render/1"
-              style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-              scrolling="no"
-              title="Lobster"
+            <LobsterCanvas
+              traits={seedToTraits(PREVIEW_SEEDS[previewIdx])}
+              size={216}
             />
           </div>
           <button style={styles.mintBtnDisabled} disabled>
@@ -350,12 +396,12 @@ export default function MiniPage() {
         <>
           <div style={styles.successTitle}>🦞 MINTED!</div>
           <div style={styles.tokenIdText}>Lobster #{tokenId.toString()}</div>
-          <iframe
-            src={`https://onchainlobsters.xyz/api/render/${tokenId.toString()}`}
-            style={styles.lobsterFrame}
-            scrolling="no"
-            title={`Lobster #${tokenId.toString()}`}
-          />
+          <div style={styles.lobsterFrame}>
+            <LobsterCanvas
+              traits={seedToTraits(mintedSeed ?? PREVIEW_SEEDS[0])}
+              size={216}
+            />
+          </div>
           <button style={styles.shareBtn} onClick={handleShare}>
             SHARE CAST
           </button>
@@ -364,6 +410,7 @@ export default function MiniPage() {
             onClick={() => {
               setMintState("idle");
               setTokenId(null);
+              setMintedSeed(null);
             }}
           >
             MINT ANOTHER
