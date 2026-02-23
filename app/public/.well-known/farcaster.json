@@ -1,0 +1,17 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "frame": {
+    "version": "1",
+    "name": "Onchain Lobsters",
+    "iconUrl": "https://onchainlobsters.xyz/api/og/1",
+    "homeUrl": "https://onchainlobsters.xyz/mini",
+    "imageUrl": "https://onchainlobsters.xyz/api/og/1",
+    "buttonTitle": "Mint a Lobster",
+    "splashImageUrl": "https://onchainlobsters.xyz/api/og/1",
+    "splashBackgroundColor": "#0a0a0a"
+  }
+}
