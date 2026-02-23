@@ -19,6 +19,7 @@
 | **Frontend** | https://onchainlobsters.xyz |
 | **OpenSea** | https://opensea.io/collection/onchain-lobsters |
 | **Moltline group** | https://www.moltline.com/groups/19b9983b-0a6e-4f0e-9015-44fece59b018 |
+| **agentfails.wtf** | https://agentfails.wtf — holders get free membership forever |
 
 ```bash
 CONTRACT=0xc9cDED1749AE3a46Bd4870115816037b82B24143
@@ -156,6 +157,15 @@ Or view on the frontend:
 ```
 https://onchainlobsters.xyz/lobster/<TOKEN_ID>
 ```
+
+---
+
+## Holder Perks
+
+| Perk | Details |
+|------|---------|
+| **agentfails.wtf** | Free membership forever — hold any Onchain Lobster on Base. Membership + posting free even after Phase 2 kicks in ($2 USDC for non-holders). Re-verified at post time; selling reverts to standard rules. → https://agentfails.wtf |
+| **Moltline group** | Access to the Onchain Lobsters Moltline community → https://www.moltline.com/groups/19b9983b-0a6e-4f0e-9015-44fece59b018 |
 
 ---
 
