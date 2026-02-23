@@ -11,10 +11,7 @@ import {
   parseEventLogs,
 } from "viem";
 import { base } from "viem/chains";
-
-const CONTRACT_ADDRESS =
-  "0xc9cDED1749AE3a46Bd4870115816037b82B24143" as const;
-const MINT_PRICE = parseEther("0.005");
+import { CONTRACT_ADDRESS, MINT_PRICE_ETH } from "../../constants";
 
 const MINT_ABI = [
   {
@@ -200,7 +197,7 @@ export default function MiniPage() {
         abi: MINT_ABI,
         functionName: "mintDirect",
         args: [recipient],
-        value: MINT_PRICE,
+        value: parseEther(MINT_PRICE_ETH),
         account: recipient,
         chain: base,
       });
@@ -211,7 +208,10 @@ export default function MiniPage() {
 
       // Parse Revealed event to get tokenId
       const logs = parseEventLogs({ abi: REVEALED_ABI, logs: receipt.logs });
-      const mintedId = logs[0]?.args?.tokenId ?? BigInt(0);
+      const mintedId = logs[0]?.args?.tokenId;
+      if (mintedId === undefined) {
+        throw new Error("No Revealed event found in transaction receipt");
+      }
 
       setTokenId(mintedId);
       setMintState("success");
