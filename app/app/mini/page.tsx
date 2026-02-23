@@ -211,6 +211,11 @@ export default function MiniPage() {
       setMintState("confirming");
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
+      // Check if transaction reverted
+      if (receipt.status === "reverted") {
+        throw new Error("Transaction reverted");
+      }
+
       // Parse Revealed event to get tokenId
       const logs = parseEventLogs({ abi: REVEALED_ABI, logs: receipt.logs });
       const mintedId = logs[0]?.args?.tokenId;
