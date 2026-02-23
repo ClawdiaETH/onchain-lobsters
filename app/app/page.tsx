@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { createPublicClient, http } from "viem";
-import { base } from "viem/chains";
 import GalleryGrid from "@/components/GalleryGrid";
 import HeroMosaic from "@/components/HeroMosaic";
 import TotalBurned from "@/components/TotalBurned";
-import { CONTRACT_ADDRESS, LOBSTERS_ABI, MINT_PRICE_ETH, MAX_SUPPLY } from "@/constants";
+import { MINT_PRICE_ETH, MAX_SUPPLY } from "@/constants";
 import { seedToTraits } from "@/lib/traits";
 import { renderLobsterSVG } from "@/lib/renderer";
+import { getCachedTotal, getCachedSeeds } from "@/lib/cache";
 
 export const revalidate = 60;
 
@@ -29,34 +28,13 @@ const PRESET_SEEDS: bigint[] = [
   0x577215664901532Cn, 0x302775637731670Dn, 0x693147180559945Fn, 0x424242424242424En,
 ];
 
-async function getTotalMinted(): Promise<number> {
-  try {
-    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
-    const n = await client.readContract({
-      address: CONTRACT_ADDRESS, abi: LOBSTERS_ABI, functionName: "totalMinted",
-    });
-    return Number(n);
-  } catch { return 0; }
-}
-
-async function getAllSeeds(total: number): Promise<bigint[]> {
-  if (total === 0) return [];
-  const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
-  const calls = Array.from({ length: total }, (_, i) => ({
-    address: CONTRACT_ADDRESS, abi: LOBSTERS_ABI,
-    functionName: "tokenSeed" as const, args: [BigInt(i + 1)],
-  }));
-  const results = await client.multicall({ contracts: calls });
-  return results.map(r => (r.result as bigint) ?? 0n);
-}
-
 function svgToDataUrl(svg: string): string {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
 export default async function HomePage() {
-  const total = await getTotalMinted();
-  const seeds = await getAllSeeds(total);
+  const total = await getCachedTotal();
+  const seeds = await getCachedSeeds(total);
 
   // Pool: real minted lobsters first, fill with presets up to 60 total for shuffle variety
   const poolSeeds = [...seeds, ...PRESET_SEEDS].slice(0, 60);
