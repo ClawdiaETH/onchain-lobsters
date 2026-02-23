@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import LobsterCanvas from "./LobsterCanvas";
 import TraitSheet from "./TraitSheet";
 import { seedToTraits } from "@/lib/traits";
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export default function GalleryGrid({ seeds, total }: Props) {
-  const [selected, setSelected] = useState<number | null>(null);
+  const router = useRouter();
   const allTraits: Traits[] = useMemo(() => seeds.map(s => seedToTraits(s)), [seeds]);
 
   if (total === 0) {
@@ -48,52 +49,77 @@ export default function GalleryGrid({ seeds, total }: Props) {
       </div>
 
       {/* Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
-        {allTraits.map((traits, i) => (
-          <div
-            key={i}
-            onClick={() => setSelected(selected === i ? null : i)}
-            style={{
-              background: "#0A0A16",
-              border: `1px solid ${selected === i ? "#C84820" : "#1A1A2E"}`,
-              borderRadius: 4,
-              overflow: "hidden",
-              cursor: "pointer",
-              transition: "all 0.15s",
-              transform: selected === i ? "scale(1.02)" : "scale(1)",
-              boxShadow: selected === i ? "0 0 20px rgba(200,72,32,0.2)" : "none",
-            }}
-            onMouseEnter={e => {
-              if (selected !== i) e.currentTarget.style.borderColor = "#282840";
-            }}
-            onMouseLeave={e => {
-              if (selected !== i) e.currentTarget.style.borderColor = "#1A1A2E";
-            }}
-          >
-            <LobsterCanvas traits={traits} size={200} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+        {allTraits.map((traits, i) => {
+          const tokenId = i + 1;
+          return (
+            <GalleryCard
+              key={i}
+              traits={traits}
+              tokenId={tokenId}
+              onClick={() => router.push(`/lobster/${tokenId}`)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-            <div style={{ padding: "10px 12px", borderTop: "1px solid #1A1A2E" }}>
-              <div style={{
-                fontFamily: MONO, fontSize: 12, color: "#C84820",
-                letterSpacing: "0.12em", fontWeight: 700,
-              }}>
-                #{String(i + 1).padStart(4, "0")}
-              </div>
-              <div style={{
-                fontFamily: MONO, fontSize: 11, color: "#8888A8",
-                marginTop: 3, letterSpacing: "0.08em",
-              }}>
-                {MUTATIONS[traits.mutation]?.name} · {SCENES[traits.scene]?.name}
-              </div>
-            </div>
+function GalleryCard({
+  traits,
+  tokenId,
+  onClick,
+}: {
+  traits: Traits;
+  tokenId: number;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      role="link"
+      tabIndex={0}
+      onKeyDown={e => e.key === "Enter" && onClick()}
+      style={{
+        background: "#0A0A16",
+        border: "1px solid #1A1A2E",
+        borderRadius: 4,
+        overflow: "hidden",
+        cursor: "pointer",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = "#C84820";
+        e.currentTarget.style.boxShadow = "0 0 16px rgba(200,72,32,0.18)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = "#1A1A2E";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      {/* Lobster render */}
+      <LobsterCanvas traits={traits} size={220} />
 
-            {selected === i && (
-              <div style={{ padding: "10px 12px", borderTop: "1px solid #1A1A2E" }}>
-                <TraitSheet traits={traits} />
-              </div>
-            )}
-          </div>
-        ))}
+      {/* Token info */}
+      <div style={{ padding: "10px 12px", borderTop: "1px solid #1A1A2E" }}>
+        <div style={{
+          fontFamily: MONO, fontSize: 12, color: "#C84820",
+          letterSpacing: "0.12em", fontWeight: 700,
+        }}>
+          #{String(tokenId).padStart(4, "0")}
+        </div>
+        <div style={{
+          fontFamily: MONO, fontSize: 11, color: "#8888A8",
+          marginTop: 3, letterSpacing: "0.08em",
+        }}>
+          {MUTATIONS[traits.mutation]?.name} · {SCENES[traits.scene]?.name}
+        </div>
+      </div>
+
+      {/* Traits — always visible */}
+      <div style={{ padding: "8px 12px 12px", borderTop: "1px solid #1A1A2E" }}>
+        <TraitSheet traits={traits} />
       </div>
     </div>
   );
