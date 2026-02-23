@@ -12,7 +12,6 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 import { Attribution } from "ox/erc8021";
-<<<<<<< feat/mini-app-polish
 import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY, LOBSTERS_ABI } from "../../constants";
 import { useTotalBurned } from "@/hooks/useTotalBurned";
 import LobsterCanvas from "@/components/LobsterCanvas";
@@ -27,12 +26,6 @@ const PREVIEW_SEEDS: bigint[] = [
   0xA1B2C3D4E5F60718n, 0x5A4B3C2D1E0F9807n, 0xFEEDFACECAFED00Dn, 0xC0FFEE0123456789n,
   0x246813579ABCDEF0n, 0xF1E2D3C4B5A69780n, 0x1234567887654321n, 0xABCDEFEFCDAB0123n,
 ];
-=======
-import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY } from "../../constants";
-import { useTotalBurned } from "@/hooks/useTotalBurned";
-import { useTotalMinted } from "@/hooks/useTotalMinted";
-import { formatClawdia } from "@/lib/format";
->>>>>>> master
 
 // Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
 const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
@@ -188,12 +181,8 @@ export default function MiniPage() {
   const [tokenId, setTokenId] = useState<bigint | null>(null);
   const [mintedSeed, setMintedSeed] = useState<bigint | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-<<<<<<< feat/mini-app-polish
   const [totalMinted, setTotalMinted] = useState<number | null>(null);
   const [previewIdx, setPreviewIdx] = useState(0);
-=======
-  const { total: totalMinted } = useTotalMinted();
->>>>>>> master
   const { total: burned, loading: burnLoading } = useTotalBurned();
 
   useEffect(() => {
@@ -205,13 +194,16 @@ export default function MiniPage() {
       setPreviewIdx(i => (i + 1) % PREVIEW_SEEDS.length);
     }, 2000);
 
-    // Fetch totalMinted once on load
-    const publicClient = createPublicClient({ chain: base, transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL) });
-    publicClient.readContract({
-      address: CONTRACT_ADDRESS,
-      abi: LOBSTERS_ABI,
-      functionName: "totalMinted",
-    }).then((v) => setTotalMinted(Number(v))).catch(() => {});
+    // Fetch totalMinted once on load (only if RPC URL is configured)
+    const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
+    if (rpcUrl) {
+      const publicClient = createPublicClient({ chain: base, transport: http(rpcUrl) });
+      publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: LOBSTERS_ABI,
+        functionName: "totalMinted",
+      }).then((v) => setTotalMinted(Number(v))).catch(() => {});
+    }
 
     return () => clearInterval(rot);
   }, []);
@@ -228,9 +220,12 @@ export default function MiniPage() {
         transport: custom(ethProvider),
       });
 
+      const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
+      if (!rpcUrl) throw new Error("RPC URL not configured");
+
       const publicClient = createPublicClient({
         chain: base,
-        transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL),
+        transport: http(rpcUrl),
       });
 
       // Request accounts from the Farcaster wallet
@@ -342,21 +337,12 @@ export default function MiniPage() {
             )}
           </div>
 
-<<<<<<< feat/mini-app-polish
           <div style={styles.lobsterFrame}>
             <LobsterCanvas
               traits={seedToTraits(PREVIEW_SEEDS[previewIdx])}
               size={216}
             />
           </div>
-=======
-          <iframe
-            src="https://onchainlobsters.xyz/api/render/1"
-            style={styles.lobsterFrame}
-            scrolling="no"
-            title="Lobster preview"
-          />
->>>>>>> master
           <div style={styles.priceLabel}>Mint price</div>
           <div style={styles.priceValue}>{MINT_PRICE_ETH} ETH</div>
           <button style={styles.mintBtn} onClick={handleMint}>
