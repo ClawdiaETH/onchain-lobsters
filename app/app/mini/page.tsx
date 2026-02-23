@@ -12,7 +12,8 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 import { Attribution } from "ox/erc8021";
-import { CONTRACT_ADDRESS, MINT_PRICE_ETH } from "../../constants";
+import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY, LOBSTERS_ABI } from "../../constants";
+import { useTotalBurned } from "@/hooks/useTotalBurned";
 
 // Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
 const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
@@ -162,16 +163,32 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
+function formatClawdia(raw: bigint): string {
+  const whole = Number(raw / 10n ** 18n);
+  if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M`;
+  if (whole >= 1_000) return `${(whole / 1_000).toFixed(1)}K`;
+  return whole.toLocaleString();
+}
+
 export default function MiniPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [mintState, setMintState] = useState<MintState>("idle");
   const [tokenId, setTokenId] = useState<bigint | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [totalMinted, setTotalMinted] = useState<number | null>(null);
+  const { total: burned, loading: burnLoading } = useTotalBurned();
 
   useEffect(() => {
     setIsMounted(true);
-    // Signal to Farcaster that the mini app is ready
     sdk.actions.ready().catch(() => {});
+
+    // Fetch totalMinted once on load
+    const publicClient = createPublicClient({ chain: base, transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL) });
+    publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: LOBSTERS_ABI,
+      functionName: "totalMinted",
+    }).then((v) => setTotalMinted(Number(v))).catch(() => {});
   }, []);
 
   const handleMint = useCallback(async () => {
@@ -272,6 +289,29 @@ export default function MiniPage() {
             <br />
             Half your mint burns $CLAWDIA.
           </div>
+          {/* Live stats */}
+          <div style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            gap: "6px", marginBottom: "1.5rem", width: "100%",
+          }}>
+            <div style={{
+              fontFamily: "'Courier New', monospace",
+              fontSize: "0.7rem", color: "#8888A8", letterSpacing: "0.12em",
+            }}>
+              {totalMinted !== null
+                ? <><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{totalMinted.toLocaleString()}</span> / {MAX_SUPPLY.toLocaleString()} MINTED</>
+                : "— / 8,004 MINTED"}
+            </div>
+            {!burnLoading && burned > 0n && (
+              <div style={{
+                fontFamily: "'Courier New', monospace",
+                fontSize: "0.7rem", color: "#C84820", letterSpacing: "0.1em",
+              }}>
+                {formatClawdia(burned)} $CLAWDIA BURNED 🔥
+              </div>
+            )}
+          </div>
+
           <iframe
             src="https://onchainlobsters.xyz/api/render/1"
             style={styles.lobsterFrame}
@@ -283,6 +323,15 @@ export default function MiniPage() {
           <button style={styles.mintBtn} onClick={handleMint}>
             MINT 🦞
           </button>
+
+          {/* Built by */}
+          <div style={{
+            marginTop: "1.5rem",
+            fontFamily: "'Courier New', monospace",
+            fontSize: "0.5rem", color: "#3A3A5A", letterSpacing: "0.1em",
+          }}>
+            built by @clawdia 🐚 · CC0 · BASE
+          </div>
         </>
       )}
 
