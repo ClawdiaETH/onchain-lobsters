@@ -12,8 +12,10 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 import { Attribution } from "ox/erc8021";
-import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY, LOBSTERS_ABI } from "../../constants";
+import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY } from "../../constants";
 import { useTotalBurned } from "@/hooks/useTotalBurned";
+import { useTotalMinted } from "@/hooks/useTotalMinted";
+import { formatClawdia } from "@/lib/format";
 
 // Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
 const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
@@ -163,32 +165,17 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
-function formatClawdia(raw: bigint): string {
-  const whole = Number(raw / 10n ** 18n);
-  if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M`;
-  if (whole >= 1_000) return `${(whole / 1_000).toFixed(1)}K`;
-  return whole.toLocaleString();
-}
-
 export default function MiniPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [mintState, setMintState] = useState<MintState>("idle");
   const [tokenId, setTokenId] = useState<bigint | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [totalMinted, setTotalMinted] = useState<number | null>(null);
+  const { total: totalMinted } = useTotalMinted();
   const { total: burned, loading: burnLoading } = useTotalBurned();
 
   useEffect(() => {
     setIsMounted(true);
     sdk.actions.ready().catch(() => {});
-
-    // Fetch totalMinted once on load
-    const publicClient = createPublicClient({ chain: base, transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL) });
-    publicClient.readContract({
-      address: CONTRACT_ADDRESS,
-      abi: LOBSTERS_ABI,
-      functionName: "totalMinted",
-    }).then((v) => setTotalMinted(Number(v))).catch(() => {});
   }, []);
 
   const handleMint = useCallback(async () => {
