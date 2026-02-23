@@ -22,7 +22,7 @@ interface BurnedState {
 
 export async function GET() {
   try {
-    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
+    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL || undefined) });
     const latest = await client.getBlockNumber();
 
     let total = 0n;
