@@ -266,7 +266,7 @@ export default function MiniPage() {
             style={styles.lobsterImg}
           />
           <div style={styles.priceLabel}>Mint price</div>
-          <div style={styles.priceValue}>0.005 ETH</div>
+          <div style={styles.priceValue}>{MINT_PRICE_ETH} ETH</div>
           <button style={styles.mintBtn} onClick={handleMint}>
             MINT 🦞
           </button>
