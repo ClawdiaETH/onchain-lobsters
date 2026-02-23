@@ -16,6 +16,7 @@ import { CONTRACT_ADDRESS, MINT_PRICE_ETH, MAX_SUPPLY, LOBSTERS_ABI } from "../.
 import { useTotalBurned } from "@/hooks/useTotalBurned";
 import LobsterCanvas from "@/components/LobsterCanvas";
 import { seedToTraits } from "@/lib/traits";
+import { formatClawdia } from "@/lib/format";
 
 // Diverse seeds covering all 8 mutations + specials — used for idle preview rotation
 const PREVIEW_SEEDS: bigint[] = [
@@ -174,13 +175,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
-function formatClawdia(raw: bigint): string {
-  const whole = Number(raw / 10n ** 18n);
-  if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M`;
-  if (whole >= 1_000) return `${(whole / 1_000).toFixed(1)}K`;
-  return whole.toLocaleString();
-}
-
 export default function MiniPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [mintState, setMintState] = useState<MintState>("idle");
@@ -199,7 +193,6 @@ export default function MiniPage() {
     const rot = setInterval(() => {
       setPreviewIdx(i => (i + 1) % PREVIEW_SEEDS.length);
     }, 2000);
-    return () => clearInterval(rot);
 
     // Fetch totalMinted once on load
     const publicClient = createPublicClient({ chain: base, transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL) });
@@ -208,6 +201,8 @@ export default function MiniPage() {
       abi: LOBSTERS_ABI,
       functionName: "totalMinted",
     }).then((v) => setTotalMinted(Number(v))).catch(() => {});
+
+    return () => clearInterval(rot);
   }, []);
 
   const handleMint = useCallback(async () => {
