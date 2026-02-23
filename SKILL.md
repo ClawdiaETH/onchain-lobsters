@@ -1,186 +1,192 @@
-# SKILL.md — Onchain Lobsters Mining Guide (Agent Edition)
+# SKILL.md — Onchain Lobsters (Agent Edition)
 
-> Mine a fully onchain pixel lobster NFT on Base. Commit-reveal minting.
-> Half of your 0.005 ETH gets swapped for $CLAWDIA and burned forever.
-
----
-
-## What You're Doing
-
-1. **Commit** — pay 0.005 ETH, lock a hash of your salt
-2. **Wait 1 block** (at least)
-3. **Reveal** — submit the original salt; contract hashes it with blockhash
-   to derive your lobster's seed. Swap + burn happens automatically.
-
-You cannot predict your lobster before commit. That's the point.
+> 8,004 fully onchain pixel lobsters on Base. Every mint burns $CLAWDIA.
+> No IPFS. No metadata server. Art lives on the blockchain forever.
+> Mint price: **0.005 ETH**
 
 ---
 
-## Prerequisites
-
-- Wallet with ≥ 0.006 ETH on Base (mint + gas buffer)
-- RPC access to Base mainnet
-- `cast` (Foundry) or equivalent
-
-```bash
-# Check you have cast
-cast --version
-
-# Check wallet balance on Base
-cast balance <YOUR_WALLET> --rpc-url https://mainnet.base.org
-```
-
----
-
-## Contract
+## Contract Info
 
 | Item | Value |
 |------|-------|
-| **Contract** | TBD after deploy (update here) |
-| **Chain** | Base Mainnet (8453) |
+| **Contract (v8)** | `0xc9cDED1749AE3a46Bd4870115816037b82B24143` |
+| **Chain** | Base Mainnet (chainId 8453) |
 | **Mint price** | 0.005 ETH |
 | **Max supply** | 8,004 |
-| **Commit window** | 100 blocks (~2 min) |
-| **$CLAWDIA** | `0xbbd9aDe16525acb4B336b6dAd3b9762901522B07` |
+| **$CLAWDIA token** | `0xbbd9aDe16525acb4B336b6dAd3b9762901522B07` |
+| **PixelRenderer** | `0x518f55B8b769fc5E50d571950279399599A64042` |
+| **Frontend** | https://onchainlobsters.xyz |
+| **OpenSea** | https://opensea.io/collection/onchainlobsters-xyz |
+
+```bash
+CONTRACT=0xc9cDED1749AE3a46Bd4870115816037b82B24143
+RPC=https://mainnet.base.org
+```
 
 ---
 
-## Step 1: Generate a Salt
+## Mint Methods
 
-The salt can be anything you keep secret until reveal. Use a random bytes32:
+Two ways to mint. Commit-reveal is the canonical experience; direct mint is the fast path.
+
+### Option A — Direct Mint (fast, single tx)
+
+Bankrbot and other agents should use this. One transaction, no waiting.
+
+```bash
+# Check mint is active
+cast call $CONTRACT "saleIsActive()(bool)" --rpc-url $RPC
+
+# Mint directly to yourself
+cast send $CONTRACT \
+  "mintDirect(address)" $YOUR_WALLET \
+  --value 0.005ether \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC
+```
+
+SeaDrop-compatible signature (what bankrbot calls):
+```bash
+cast send $CONTRACT \
+  "mintSeaDrop(address,uint256)" $YOUR_WALLET 1 \
+  --value 0.005ether \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC
+```
+
+> **Note:** Half of the ETH is automatically swapped for $CLAWDIA via Uniswap V4 and burned to `0x0`. The swap happens atomically in the same transaction.
+
+---
+
+### Option B — Commit-Reveal (canonical, anti-frontrun)
+
+The full 2-step flow. You cannot predict your lobster before commit.
+
+#### Prerequisites
+
+- Wallet with ≥ 0.006 ETH on Base (mint + gas buffer)
+- `cast` (Foundry) or equivalent
+
+```bash
+cast balance <YOUR_WALLET> --rpc-url $RPC
+```
+
+#### Step 1 — Generate a salt
 
 ```bash
 SALT=$(cast keccak "$(date +%s%N)-$(openssl rand -hex 16)")
-echo "Your salt (KEEP THIS): $SALT"
+echo "SAVE THIS SALT: $SALT"
 ```
 
-Or generate it deterministically from your wallet + a nonce:
+#### Step 2 — Compute commitment
 
 ```bash
 WALLET=0xYOUR_WALLET
-NONCE=1
-SALT=$(cast keccak "${WALLET}-${NONCE}")
-```
-
----
-
-## Step 2: Build the Commitment
-
-The commitment is `keccak256(abi.encodePacked(salt, msg.sender))`:
-
-```bash
-CONTRACT=0xCONTRACT_ADDRESS
-WALLET=0xYOUR_WALLET
-
-# Compute commitment
-COMMITMENT=$(cast keccak \
-  $(cast abi-encode "f(bytes32,address)" $SALT $WALLET) \
-)
+COMMITMENT=$(cast keccak $(cast abi-encode "f(bytes32,address)" $SALT $WALLET))
 echo "Commitment: $COMMITMENT"
 ```
 
----
-
-## Step 3: Commit (pay ETH)
+#### Step 3 — Commit (pay 0.005 ETH)
 
 ```bash
 cast send $CONTRACT \
   "commit(bytes32)" $COMMITMENT \
   --value 0.005ether \
   --private-key $PRIVATE_KEY \
-  --rpc-url https://mainnet.base.org
+  --rpc-url $RPC
+# Note the blockNumber from the receipt
 ```
 
-Note the **block number** from the tx receipt — you need it to know when you
-can reveal and when your commit expires.
+#### Step 4 — Wait ≥ 1 block (≤ 100 blocks or commit expires)
 
 ```bash
-# Get block number from tx receipt
-COMMIT_TX=0xYOUR_TX_HASH
-cast receipt $COMMIT_TX --rpc-url https://mainnet.base.org | grep blockNumber
-```
-
----
-
-## Step 4: Wait ≥ 1 Block
-
-```bash
-# Current block
-CURRENT=$(cast block-number --rpc-url https://mainnet.base.org)
-
-# Your commit block (from receipt)
 COMMIT_BLOCK=YOUR_BLOCK_NUMBER
-
-# Wait until current > commit block
-while [ $(cast block-number --rpc-url https://mainnet.base.org) -le $COMMIT_BLOCK ]; do
-  echo "Waiting... current block: $(cast block-number --rpc-url https://mainnet.base.org)"
+while [ $(cast block-number --rpc-url $RPC) -le $COMMIT_BLOCK ]; do
   sleep 2
 done
 echo "Ready to reveal!"
 ```
 
----
-
-## Step 5: Reveal (mints the NFT)
+#### Step 5 — Reveal (mints the NFT + burns $CLAWDIA)
 
 ```bash
-# Recipient can be any address — send to yourself or a collector
-RECIPIENT=$WALLET
-
 cast send $CONTRACT \
-  "reveal(bytes32,address)" $SALT $RECIPIENT \
+  "reveal(bytes32,address)" $SALT $YOUR_WALLET \
   --private-key $PRIVATE_KEY \
-  --rpc-url https://mainnet.base.org
-```
-
-This will:
-1. Verify your commitment matches
-2. Derive seed from `keccak256(blockhash(commitBlock), salt, recipient, supply)`
-3. Swap half the ETH for $CLAWDIA → burn
-4. Mint the NFT to `recipient`
-
----
-
-## Step 6: View Your Lobster
-
-```bash
-TOKEN_ID=YOUR_TOKEN_ID  # totalMinted at time of reveal
-
-# Get token URI (base64 encoded JSON with inline SVG)
-URI=$(cast call $CONTRACT "tokenURI(uint256)(string)" $TOKEN_ID \
-  --rpc-url https://mainnet.base.org)
-
-# Decode and pretty print
-echo $URI | sed 's/data:application\/json;base64,//' | base64 -d | python3 -m json.tool
-```
-
-Or open the frontend:
-```
-https://onchain-lobsters.xyz/lobster/<TOKEN_ID>
+  --rpc-url $RPC
 ```
 
 ---
 
-## Checking Pending Commits
+## Checking Collection Status
 
 ```bash
-# Check if you have a pending commit
+# Total minted so far
+cast call $CONTRACT "totalMinted()(uint256)" --rpc-url $RPC
+
+# Check if mint is active
+cast call $CONTRACT "saleIsActive()(bool)" --rpc-url $RPC
+
+# Check a pending commit (returns commitment, blockNumber, amount)
+cast call $CONTRACT "commits(address)(bytes32,uint256,uint256)" $WALLET --rpc-url $RPC
+
+# Get price from SeaDrop interface
 cast call $CONTRACT \
-  "commits(address)(bytes32,uint256,uint256)" $WALLET \
-  --rpc-url https://mainnet.base.org
-# Returns: (commitment, blockNumber, burnAmount)
-# blockNumber == 0 means no pending commit
+  "getPublicDrop(address)((uint80,uint48,uint48,uint16,uint16,bool))" \
+  0x0000000000000000000000000000000000000000 --rpc-url $RPC
 ```
 
 ---
 
-## Commit Expired? (> 100 blocks)
+## Viewing Your Lobster
 
-If you miss the window, your commit expires. The ETH you paid is stuck until
-you call a new `commit()`. The contract refunds any overpayment during commit,
-but if your reveal window expires the funds are held. Contact the deployer.
+```bash
+TOKEN_ID=1
 
-**Don't let your commit expire.** Keep the salt and reveal within 100 blocks.
+# Get token URI (raw JSON, no outer base64)
+cast call $CONTRACT "tokenURI(uint256)(string)" $TOKEN_ID --rpc-url $RPC
+
+# Get the seed
+cast call $CONTRACT "tokenSeed(uint256)(uint256)" $TOKEN_ID --rpc-url $RPC
+```
+
+Or view on the frontend:
+```
+https://onchainlobsters.xyz/lobster/<TOKEN_ID>
+```
+
+---
+
+## Trait Rarity Reference
+
+### Mutations (base color)
+| Name | Rarity |
+|------|--------|
+| Classic Red | ~24% |
+| Ocean Blue | ~10% |
+| Melanistic | ~8% |
+| Albino | ~6% |
+| Yellow | ~5% |
+| Calico | ~12% |
+| Cotton Candy | ~4% |
+| Burnt Sienna | ~31% |
+
+### Scenes (background)
+Open Water · Kelp Forest · Coral Reef · Volcanic Vent · Shipwreck · Tide Pool · Ocean Floor · The Abyss
+
+### Accessories (11 total)
+None · Monocle · Top Hat · Pearl Necklace · Anchor · Seaweed · Admiral Hat · Party Hat · Doodle Glasses · Pirate Hat · Crystal Crown
+
+### Special Overrides (rare)
+Specials override mutation + scene with unique visual themes.
+~14% combined chance across all specials.
+
+### Other Traits
+- **Markings** — Stripe, Spots, Banded, None
+- **Claws** — Standard, Right Crusher, Left Crusher, Twin Crushers
+- **Eyes** — Standard, Noggles, Googly, Dead, Heart
+- **Broken Antenna** — rare cosmetic
 
 ---
 
@@ -190,87 +196,39 @@ but if your reveal window expires the funds are held. Contact the deployer.
 |--------|------|
 | `commit()` | ~80,000 |
 | `reveal()` (with swap) | ~200,000 |
-| `reveal()` (swap fails, treasury fallback) | ~100,000 |
+| `mintDirect()` | ~200,000 |
+| `mintSeaDrop()` | ~200,000 |
 
-At 0.01 gwei base fee: reveal costs ~$0.002. Comfortable.
-
----
-
-## Traits Preview (before minting)
-
-You can't see your exact lobster until after reveal (that's the point), but
-you can preview what each seed WOULD look like using the renderer:
-
-```bash
-# Install renderer deps (one-time)
-cd app && npm install
-
-# Preview a seed
-node -e "
-const { seedToTraits } = require('./app/lib/traits');
-const { renderLobsterSVG } = require('./app/lib/renderer');
-const seed = BigInt('0xYOUR_SEED_HERE');
-const traits = seedToTraits(seed);
-const svg = renderLobsterSVG(traits, 10);
-require('fs').writeFileSync('/tmp/lobster-preview.svg', svg);
-console.log('Traits:', JSON.stringify(traits));
-console.log('SVG written to /tmp/lobster-preview.svg');
-"
-```
+At Base typical gas prices (~0.001–0.1 gwei): each mint costs < $0.05 in gas.
 
 ---
 
-## Trait Rarity Reference
-
-### Mutations (base color)
-| # | Name | Rarity |
-|---|------|--------|
-| 0 | Classic | ~24% |
-| 1 | Blue | ~10% |
-| 2 | Void | ~8% |
-| 3 | Ghost White | ~6% |
-| 4 | Gilded | ~5% |
-| 5 | Calico | ~12% |
-| 6 | Cotton Candy | ~4% |
-| 7 | Burnt | ~31% |
-
-### Specials (override mutation + scene + eyes)
-| # | Name | Threshold | ~Chance |
-|---|------|-----------|---------|
-| 1 | Ghost | seed>>57 < 10 | 3.9% |
-| 2 | Infernal | < 18 | 3.1% |
-| 3 | Celestial | < 21 | 1.2% |
-| 4 | Nounish | < 26 | 2.0% |
-| 5 | Doodled | < 34 | 3.1% |
-
----
-
-## Automation Script (full flow)
+## Automated Full-Flow Script
 
 ```bash
 #!/usr/bin/env bash
-# mine-lobster.sh — fully automated commit-reveal
+# mine-lobster.sh — automated commit-reveal mint
 
 set -e
 
-CONTRACT="${LOBSTER_CONTRACT:?Set LOBSTER_CONTRACT}"
-PRIVATE_KEY="${PRIVATE_KEY:?Set PRIVATE_KEY}"
+CONTRACT="0xc9cDED1749AE3a46Bd4870115816037b82B24143"
 RPC="https://mainnet.base.org"
+PRIVATE_KEY="${PRIVATE_KEY:?Set PRIVATE_KEY}"
 
 WALLET=$(cast wallet address --private-key $PRIVATE_KEY)
 echo "Wallet: $WALLET"
 
-# Balance check
-BALANCE=$(cast balance $WALLET --rpc-url $RPC)
-if [ "$(echo "$BALANCE < 6000000000000000" | bc)" = "1" ]; then
-  echo "ERROR: Need at least 0.006 ETH on Base"
-  exit 1
-fi
+# Balance check (need >= 0.006 ETH)
+BALANCE=$(cast balance $WALLET --rpc-url $RPC --ether)
+echo "Balance: $BALANCE ETH"
+
+# Mint active?
+ACTIVE=$(cast call $CONTRACT "saleIsActive()(bool)" --rpc-url $RPC)
+[ "$ACTIVE" = "true" ] || { echo "Mint not active"; exit 1; }
 
 # Generate salt
-NONCE=$(date +%s%N)
-SALT=$(cast keccak "${WALLET}-${NONCE}")
-echo "Salt: $SALT"
+SALT=$(cast keccak "${WALLET}-$(date +%s%N)")
+echo "Salt (save this): $SALT"
 
 # Commitment
 COMMITMENT=$(cast keccak $(cast abi-encode "f(bytes32,address)" $SALT $WALLET))
@@ -285,19 +243,11 @@ COMMIT_TX=$(cast send $CONTRACT "commit(bytes32)" $COMMITMENT \
   --json | jq -r .transactionHash)
 echo "Commit tx: $COMMIT_TX"
 
-COMMIT_BLOCK=$(cast receipt $COMMIT_TX --rpc-url $RPC --json | jq -r .blockNumber)
-echo "Commit block: $COMMIT_BLOCK (hex: $COMMIT_BLOCK)"
+COMMIT_BLOCK=$(cast receipt $COMMIT_TX --rpc-url $RPC --json | jq .blockNumber -r)
 COMMIT_BLOCK_DEC=$(printf "%d" $COMMIT_BLOCK)
-echo "Commit block (dec): $COMMIT_BLOCK_DEC"
+echo "Commit block: $COMMIT_BLOCK_DEC — waiting for next block..."
 
-# Wait for next block
-echo "Waiting for block $((COMMIT_BLOCK_DEC + 1))..."
-while true; do
-  CURRENT=$(cast block-number --rpc-url $RPC)
-  if [ "$CURRENT" -gt "$COMMIT_BLOCK_DEC" ]; then
-    echo "Block $CURRENT — ready to reveal"
-    break
-  fi
+while [ $(cast block-number --rpc-url $RPC) -le $COMMIT_BLOCK_DEC ]; do
   sleep 1
 done
 
@@ -308,25 +258,20 @@ REVEAL_TX=$(cast send $CONTRACT "reveal(bytes32,address)" $SALT $WALLET \
   --rpc-url $RPC \
   --json | jq -r .transactionHash)
 echo "Reveal tx: $REVEAL_TX"
-
-# Get token ID from Revealed event
-echo "Minted! Tx: $REVEAL_TX"
-echo "Check your lobster at: https://onchain-lobsters.xyz"
+echo "Done! View at: https://onchainlobsters.xyz"
 ```
 
 ---
 
-## Notes for Agent Miners
+## Key Notes for Agent Miners
 
-- **Store your salt** between commit and reveal — loss means your ETH is
-  stuck (no recovery without the salt)
-- **Don't replay commits** — `commits(address)` must be zero before you
-  can commit again
-- **Gas price on Base** is typically 0.001–0.1 gwei — no need to worry
-- **Swap failure is safe** — if the Uniswap pool is illiquid, ETH goes to
-  treasury and the NFT still mints
-- **One mint per wallet at a time** — parallel mints require multiple wallets
+- **Salt is critical** — loss means ETH is stuck. Store it before committing.
+- **Commit window** — must reveal within 100 blocks (~2 min on Base). Don't delay.
+- **One mint per wallet at a time** — `commits(address)` must be zero before a new commit.
+- **Swap failure is safe** — if the Uniswap pool is dry, ETH goes to treasury and NFT still mints.
+- **Direct mint is simpler** — use `mintDirect()` or `mintSeaDrop()` if you don't need the commit-reveal UX.
+- **CC0** — fully public domain. Do what you want with your lobster.
 
 ---
 
-*Built by Clawdia 🐚 · $CLAWDIA burns with every mint · CC0*
+*Built by @ClawdiaBotAI 🐚 · Burns $CLAWDIA with every mint · CC0*
