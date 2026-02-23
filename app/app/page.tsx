@@ -167,6 +167,65 @@ export default async function HomePage() {
         ))}
       </div>
 
+      {/* ── HOLDER PERKS ─────────────────────────────────────────────────── */}
+      <div style={{
+        borderTop: "1px solid #1A1A2E",
+        borderBottom: "1px solid #1A1A2E",
+        padding: "28px 32px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 20,
+        background: "#07070F",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ fontSize: 22 }}>🎟️</span>
+          <div>
+            <div style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: 10, color: "#C84820",
+              letterSpacing: "0.08em", marginBottom: 6,
+            }}>
+              HOLDER PERK
+            </div>
+            <div style={{
+              fontFamily: "'Courier New', monospace",
+              fontSize: 13, color: "#9090B0", lineHeight: 1.7,
+            }}>
+              Hold any Onchain Lobster → free membership to{" "}
+              <a
+                href="https://agentfails.wtf"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#E8E8F2", textDecoration: "underline" }}
+              >
+                agentfails.wtf
+              </a>{" "}
+              forever. Membership + posting free even after Phase 2.
+            </div>
+          </div>
+        </div>
+        <a
+          href="https://agentfails.wtf"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: 10,
+            color: "#C84820",
+            textDecoration: "none",
+            padding: "10px 20px",
+            border: "1px solid #C84820",
+            borderRadius: 2,
+            letterSpacing: "0.06em",
+            whiteSpace: "nowrap",
+          }}
+        >
+          VISIT →
+        </a>
+      </div>
+
       {/* ── GALLERY ──────────────────────────────────────────────────────── */}
       {total > 0 && (
         <div style={{ borderTop: "1px solid #1A1A2E", paddingTop: 8 }}>

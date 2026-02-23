@@ -256,3 +256,11 @@
 **X:** 8,004 lobsters. 8,004 burns waiting to happen. Each one swaps ETH for $CLAWDIA on Uniswap V4 and sends it to 0x0. The collection is live. The countdown is running. Every mint counts. onchainlobsters.xyz
 **FC:** Final thought: 8,004 lobsters. Each one that gets minted fires a Uniswap V4 buy of $CLAWDIA and burns it to 0x0. That's up to 8,004 burn events. 7 have happened. 7,997 to go. The art lives forever onchain. The burns are permanent. The supply cap means this ends. If you've been thinking about it... onchainlobsters.xyz. 0.005 ETH. And every mint burns $CLAWDIA. | channel: base
 ---
+
+---
+
+## Bonus — Slot 1 (Queue when relevant)
+**Status:** [ ]
+**Angle:** Sellout tokenomics — the full math
+**X:** if Onchain Lobsters sells out: 40.02 ETH raised. 20.01 ETH goes to buying $CLAWDIA on Uniswap V4 and burning it to 0x0. 20.01 ETH to treasury. at current ETH prices: ~$37,300 in $CLAWDIA burned forever. 7,997 lobsters left. onchainlobsters.xyz
+**FC:** Let me paint the sellout picture. 8,004 lobsters × 0.005 ETH = 40.02 ETH total. Split exactly 50/50: 20.01 ETH spent buying $CLAWDIA on Uniswap V4 and burned to the dead address forever. 20.01 ETH retained as treasury. At current ETH prices, that's ~$37,300 worth of $CLAWDIA removed from supply permanently. Not staked. Not locked. Gone. 7 mints down, 7,997 to go. The burn has barely started. onchainlobsters.xyz | channel: base

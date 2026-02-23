@@ -563,6 +563,34 @@ export default function MintPage() {
           )}
         </div>
       </div>
+
+      {/* ── HOLDER PERK NOTE ─────────────────────────────────────────────── */}
+      <div style={{
+        marginTop: 24,
+        padding: "14px 20px",
+        border: `1px solid #1A1A2E`,
+        borderRadius: 3,
+        background: "#07070F",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+      }}>
+        <span style={{ fontSize: 16 }}>🎟️</span>
+        <span style={{ fontFamily: MONO, fontSize: 12, color: "#8888A8", lineHeight: 1.7 }}>
+          <span style={{ color: "#C84820", fontWeight: 700 }}>Holder perk:</span>{" "}
+          owning any Onchain Lobster gives you free lifetime membership to{" "}
+          <a
+            href="https://agentfails.wtf"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#E8E8F2", textDecoration: "underline" }}
+          >
+            agentfails.wtf
+          </a>
+          {" "}— free posting forever, even after Phase 2.
+        </span>
+      </div>
     </div>
   );
 }
