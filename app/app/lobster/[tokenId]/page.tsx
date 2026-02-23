@@ -5,6 +5,22 @@ import { base } from "viem/chains";
 import { CONTRACT_ADDRESS, LOBSTERS_ABI, OPENSEA_COLLECTION } from "@/constants";
 import { seedToTraits } from "@/lib/traits";
 
+// Pre-render all currently minted lobster pages at build time.
+// dynamicParams=true (default) means new mints after build still SSR on demand.
+export const revalidate = false;
+
+export async function generateStaticParams() {
+  try {
+    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
+    const total = await client.readContract({
+      address: CONTRACT_ADDRESS, abi: LOBSTERS_ABI, functionName: "totalMinted",
+    });
+    return Array.from({ length: Number(total) }, (_, i) => ({ tokenId: String(i + 1) }));
+  } catch {
+    return [];
+  }
+}
+
 interface Props {
   params: { tokenId: string };
 }
