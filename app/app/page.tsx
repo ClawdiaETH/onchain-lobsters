@@ -31,7 +31,7 @@ const PRESET_SEEDS: bigint[] = [
 
 async function getTotalMinted(): Promise<number> {
   try {
-    const client = createPublicClient({ chain: base, transport: http() });
+    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
     const n = await client.readContract({
       address: CONTRACT_ADDRESS, abi: LOBSTERS_ABI, functionName: "totalMinted",
     });
@@ -41,7 +41,7 @@ async function getTotalMinted(): Promise<number> {
 
 async function getAllSeeds(total: number): Promise<bigint[]> {
   if (total === 0) return [];
-  const client = createPublicClient({ chain: base, transport: http() });
+  const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL) });
   const calls = Array.from({ length: total }, (_, i) => ({
     address: CONTRACT_ADDRESS, abi: LOBSTERS_ABI,
     functionName: "tokenSeed" as const, args: [BigInt(i + 1)],
@@ -219,7 +219,25 @@ export default async function HomePage() {
       {/* ── GALLERY ──────────────────────────────────────────────────────── */}
       {total > 0 && (
         <div style={{ borderTop: "1px solid #1A1A2E", paddingTop: 8 }}>
-          <GalleryGrid seeds={seeds} total={total} />
+          <GalleryGrid seeds={seeds.slice(0, 8)} total={total} />
+          <div style={{ textAlign: "center", padding: "8px 0 40px" }}>
+            <a
+              href="/gallery"
+              style={{
+                fontFamily: "'Courier New',monospace",
+                fontSize: 13,
+                letterSpacing: "0.16em",
+                color: "#C84820",
+                textDecoration: "none",
+                padding: "10px 28px",
+                border: "1px solid #C84820",
+                borderRadius: 3,
+                display: "inline-block",
+              }}
+            >
+              VIEW ALL {total} LOBSTERS →
+            </a>
+          </div>
         </div>
       )}
     </>
