@@ -186,6 +186,7 @@ export default function MiniPage() {
   const { total: burned, loading: burnLoading } = useTotalBurned();
 
   useEffect(() => {
+    let cancelled = false;
     setIsMounted(true);
     sdk.actions.ready().catch(() => {});
 
@@ -202,10 +203,15 @@ export default function MiniPage() {
         address: CONTRACT_ADDRESS,
         abi: LOBSTERS_ABI,
         functionName: "totalMinted",
-      }).then((v) => setTotalMinted(Number(v))).catch(() => {});
+      }).then((v) => {
+        if (!cancelled) setTotalMinted(Number(v));
+      }).catch(() => {});
     }
 
-    return () => clearInterval(rot);
+    return () => {
+      cancelled = true;
+      clearInterval(rot);
+    };
   }, []);
 
   const handleMint = useCallback(async () => {
@@ -265,9 +271,11 @@ export default function MiniPage() {
       setTokenId(mintedId);
       // Extract seed directly from the Revealed event
       const seed = logs[0]?.args?.seed;
-      if (seed !== undefined) {
-        setMintedSeed(seed);
+      if (seed === undefined) {
+        throw new Error("Seed not found in Revealed event");
       }
+      setMintedSeed(seed);
+      setTotalMinted((prev) => (prev !== null ? prev + 1 : null));
       setMintState("success");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
