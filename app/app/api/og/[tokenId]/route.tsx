@@ -112,7 +112,10 @@ export async function GET(
           </div>
         </div>
       ),
-      { width: 1200, height: 630 }
+      {
+        width: 1200, height: 630,
+        headers: { "Cache-Control": "public, max-age=2592000, stale-while-revalidate=86400, immutable" },
+      }
     );
   } catch (e) {
     console.error("OG error:", e);

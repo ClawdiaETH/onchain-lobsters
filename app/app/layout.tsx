@@ -4,6 +4,8 @@ import { base, mainnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { injected, coinbaseWallet } from "wagmi/connectors";
 import { Attribution } from "ox/erc8021";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Nav from "@/components/Nav";
 import Ticker from "@/components/Ticker";
 import Footer from "@/components/Footer";
@@ -18,7 +20,7 @@ const config = createConfig({
     coinbaseWallet({ appName: "Onchain Lobsters" }),
   ],
   transports: {
-    [base.id]: http(),
+    [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL),
     [mainnet.id]: http(),
   },
   dataSuffix: DATA_SUFFIX,
@@ -70,6 +72,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </QueryClientProvider>
         </WagmiProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

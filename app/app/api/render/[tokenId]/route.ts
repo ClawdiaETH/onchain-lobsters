@@ -43,7 +43,7 @@ img{max-width:100%;max-height:100%;image-rendering:pixelated;image-rendering:cri
     return new NextResponse(html, {
       headers: {
         "Content-Type": "text/html",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "public, max-age=2592000, stale-while-revalidate=86400, immutable",
       },
     });
   } catch (e) {
