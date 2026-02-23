@@ -186,7 +186,7 @@ export default function MiniPage() {
 
       const publicClient = createPublicClient({
         chain: base,
-        transport: http("https://mainnet.base.org"),
+        transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL),
       });
 
       // Request accounts from the Farcaster wallet
