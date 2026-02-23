@@ -17,7 +17,7 @@
 | **$CLAWDIA token** | `0xbbd9aDe16525acb4B336b6dAd3b9762901522B07` |
 | **PixelRenderer** | `0x518f55B8b769fc5E50d571950279399599A64042` |
 | **Frontend** | https://onchainlobsters.xyz |
-| **OpenSea** | https://opensea.io/collection/onchainlobsters-xyz |
+| **OpenSea** | https://opensea.io/collection/onchain-lobsters |
 
 ```bash
 CONTRACT=0xc9cDED1749AE3a46Bd4870115816037b82B24143
