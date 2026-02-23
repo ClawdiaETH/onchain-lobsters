@@ -3,7 +3,8 @@ import Link from "next/link";
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { CONTRACT_ADDRESS, LOBSTERS_ABI, OPENSEA_COLLECTION } from "@/constants";
-import { seedToTraits } from "@/lib/traits";
+import { seedToTraits, SPECIAL_NAMES } from "@/lib/traits";
+import { MUTATIONS, SCENES, MARKINGS, EYES_LIST, CLAWS_LIST, ACCESSORIES } from "@/lib/renderer";
 import { getCachedTotal } from "@/lib/cache";
 
 // Pre-render all currently minted lobster pages at build time.
@@ -33,15 +34,14 @@ const TEXT_PRI = "#E8E8F2";
 const TEXT_SEC = "#6868A8";
 const TEXT_MUT = "#3A3A5A";
 
-// Trait label maps
-const MUTATION_NAMES  = ["Classic Red","Calico","Melanistic","Ghost","Blue Ringed","Albino","Nounish","Doodled"];
-const SCENE_NAMES     = ["Open Water","Kelp Forest","Coral Reef","Volcanic Vent","Shipwreck","Bioluminescent","Arctic","The Abyss"];
-const MARKING_NAMES   = ["None","Banded","Spotted","Striped","Mottled","Iridescent","Camouflage","Luminous"];
-const CLAW_NAMES      = ["Standard","Right Crusher","Left Crusher","Dual Crusher","Regenerating","Micro"];
-const EYE_NAMES       = ["Standard","Compound","Stalked","Laser","Void","Googly","Nounish"];
-const ACCESSORY_NAMES = ["None","Monocle","Top Hat","Pearl Necklace","Anchor Tattoo","Seaweed Crown","Admiral Hat","Party Hat","Doodle Glasses","Pirate Patch","Crystal Crown"];
+// Trait label maps — derived from lib/renderer.ts + lib/traits.ts (single source of truth)
+const MUTATION_NAMES  = MUTATIONS.map(m => m.name);
+const SCENE_NAMES     = SCENES.map(s => s.name);
+const MARKING_NAMES   = [...MARKINGS];
+const CLAW_NAMES      = [...CLAWS_LIST];
+const EYE_NAMES       = [...EYES_LIST];
+const ACCESSORY_NAMES = [...ACCESSORIES];
 const TAIL_NAMES      = ["Variant 1","Variant 2","Variant 3","Variant 4","Variant 5"];
-const SPECIAL_NAMES   = ["","Ghost","Infernal","Celestial","Nounish","Doodled"];
 
 async function getTokenData(tokenId: number) {
   try {

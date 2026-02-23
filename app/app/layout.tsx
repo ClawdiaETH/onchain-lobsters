@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="twitter:image"       content="https://onchainlobsters.xyz/api/og" />
 
         {/* Farcaster Mini App frame meta */}
-        <meta name="fc:frame" content='{"version":"next","imageUrl":"https://onchainlobsters.xyz/api/og/1","button":{"title":"Mint a Lobster 🦞","action":{"type":"launch_frame","name":"Onchain Lobsters","url":"https://onchainlobsters.xyz/mini","splashImageUrl":"https://onchainlobsters.xyz/api/og/1","splashBackgroundColor":"#0a0a0a"}}}' />
+        <meta name="fc:frame" content='{"version":"1","imageUrl":"https://onchainlobsters.xyz/api/og/1","button":{"title":"Mint a Lobster 🦞","action":{"type":"launch_frame","name":"Onchain Lobsters","url":"https://onchainlobsters.xyz/mini","splashImageUrl":"https://onchainlobsters.xyz/api/og/1","splashBackgroundColor":"#0a0a0a"}}}' />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

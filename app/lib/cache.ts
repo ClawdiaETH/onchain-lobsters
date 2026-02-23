@@ -20,6 +20,10 @@ import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { CONTRACT_ADDRESS, LOBSTERS_ABI } from "@/constants";
 
+// Namespace all cache keys by contract address (last 8 chars) so redeployments
+// automatically get a fresh cache without stale seeds from old contracts.
+const CACHE_NS = CONTRACT_ADDRESS.slice(-8).toLowerCase();
+
 const RPC = process.env.BASE_RPC_URL;
 
 function client() {
@@ -29,14 +33,14 @@ function client() {
 /** Get totalMinted — cached 120s. Falls back to RPC on miss/error. */
 export async function getCachedTotal(): Promise<number> {
   try {
-    const cached = await kv.get<number>("lobsters:total");
+    const cached = await kv.get<number>(`lobsters:${CACHE_NS}:total`);
     if (cached !== null && cached !== undefined) return cached;
 
     const c = client();
     const total = Number(
       await c.readContract({ address: CONTRACT_ADDRESS, abi: LOBSTERS_ABI, functionName: "totalMinted" })
     );
-    await kv.set("lobsters:total", total, { ex: 120 }); // 120s TTL
+    await kv.set(`lobsters:${CACHE_NS}:total`, total, { ex: 120 }); // 120s TTL
     return total;
   } catch {
     try {
@@ -54,7 +58,7 @@ export async function getCachedSeeds(total: number): Promise<bigint[]> {
 
   try {
     // Read all seed keys in one pipeline
-    const keys = Array.from({ length: total }, (_, i) => `lobsters:seed:${i + 1}`);
+    const keys = Array.from({ length: total }, (_, i) => `lobsters:${CACHE_NS}:seed:${i + 1}`);
     const cached = await kv.mget<(string | null)[]>(...keys);
 
     // Find which tokenIds are missing from cache
@@ -74,7 +78,7 @@ export async function getCachedSeeds(total: number): Promise<bigint[]> {
       const pipeline = kv.pipeline();
       results.forEach((r, i) => {
         const seed = (r.result as bigint) ?? 0n;
-        pipeline.set(`lobsters:seed:${missing[i]}`, seed.toString());
+        pipeline.set(`lobsters:${CACHE_NS}:seed:${missing[i]}`, seed.toString());
         cached[missing[i] - 1] = seed.toString();
       });
       await pipeline.exec();
@@ -97,5 +101,5 @@ export async function getCachedSeeds(total: number): Promise<bigint[]> {
 
 /** Invalidate the total cache (call after a known mint). */
 export async function invalidateTotal() {
-  try { await kv.del("lobsters:total"); } catch {}
+  try { await kv.del(`lobsters:${CACHE_NS}:total`); } catch {}
 }
