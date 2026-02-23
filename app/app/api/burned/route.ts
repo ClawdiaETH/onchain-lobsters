@@ -34,7 +34,7 @@ export async function GET() {
     let from = DEPLOY_BLOCK;
 
     while (from <= latest) {
-      const to = from + CHUNK_SIZE > latest ? latest : from + CHUNK_SIZE;
+      const to = from + CHUNK_SIZE - 1n > latest ? latest : from + CHUNK_SIZE - 1n;
 
       const logs = await client.getLogs({
         address: CONTRACT_ADDRESS,
