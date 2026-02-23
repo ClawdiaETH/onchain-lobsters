@@ -68,13 +68,15 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: "2rem",
     lineHeight: 1.8,
   },
-  lobsterImg: {
-    width: "240px",
-    height: "240px",
-    imageRendering: "pixelated",
+  lobsterFrame: {
+    width: "220px",
+    height: "286px",       // 40:52 pixel ratio — same as the lobster sprite
+    border: "2px solid #C84820",
     borderRadius: "8px",
     marginBottom: "1.5rem",
-    border: "2px solid #C84820",
+    display: "block",
+    background: "#050509",
+    overflow: "hidden",
   },
   priceLabel: {
     fontSize: "0.6rem",
@@ -270,10 +272,11 @@ export default function MiniPage() {
             <br />
             Half your mint burns $CLAWDIA.
           </div>
-          <img
-            src="https://onchainlobsters.xyz/api/og/1"
-            alt="Lobster preview"
-            style={styles.lobsterImg}
+          <iframe
+            src="https://onchainlobsters.xyz/api/render/1"
+            style={styles.lobsterFrame}
+            scrolling="no"
+            title="Lobster preview"
           />
           <div style={styles.priceLabel}>Mint price</div>
           <div style={styles.priceValue}>{MINT_PRICE_ETH} ETH</div>
@@ -287,11 +290,14 @@ export default function MiniPage() {
       {(mintState === "minting" || mintState === "confirming") && (
         <>
           <div style={styles.title}>ONCHAIN LOBSTERS</div>
-          <img
-            src="https://onchainlobsters.xyz/api/og/1"
-            alt="Lobster"
-            style={{ ...styles.lobsterImg, opacity: 0.5 }}
-          />
+          <div style={{ ...styles.lobsterFrame, opacity: 0.4 }}>
+            <iframe
+              src="https://onchainlobsters.xyz/api/render/1"
+              style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+              scrolling="no"
+              title="Lobster"
+            />
+          </div>
           <button style={styles.mintBtnDisabled} disabled>
             {mintState === "minting" ? "CONFIRM IN WALLET..." : "MINTING..."}
           </button>
@@ -308,10 +314,11 @@ export default function MiniPage() {
         <>
           <div style={styles.successTitle}>🦞 MINTED!</div>
           <div style={styles.tokenIdText}>Lobster #{tokenId.toString()}</div>
-          <img
-            src={`https://onchainlobsters.xyz/api/og/${tokenId.toString()}`}
-            alt={`Lobster #${tokenId.toString()}`}
-            style={styles.lobsterImg}
+          <iframe
+            src={`https://onchainlobsters.xyz/api/render/${tokenId.toString()}`}
+            style={styles.lobsterFrame}
+            scrolling="no"
+            title={`Lobster #${tokenId.toString()}`}
           />
           <button style={styles.shareBtn} onClick={handleShare}>
             SHARE CAST
