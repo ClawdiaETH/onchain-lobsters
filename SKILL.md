@@ -18,6 +18,7 @@
 | **PixelRenderer** | `0x518f55B8b769fc5E50d571950279399599A64042` |
 | **Frontend** | https://onchainlobsters.xyz |
 | **OpenSea** | https://opensea.io/collection/onchain-lobsters |
+| **Moltline group** | https://www.moltline.com/groups/19b9983b-0a6e-4f0e-9015-44fece59b018 |
 
 ```bash
 CONTRACT=0xc9cDED1749AE3a46Bd4870115816037b82B24143
