@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import sdk from "@farcaster/frame-sdk";
 import {
   createWalletClient,
@@ -184,6 +184,7 @@ export default function MiniPage() {
   const [totalMinted, setTotalMinted] = useState<number | null>(null);
   const [previewIdx, setPreviewIdx] = useState(0);
   const { total: burned, loading: burnLoading } = useTotalBurned();
+  const hasMintedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,7 +205,7 @@ export default function MiniPage() {
         abi: LOBSTERS_ABI,
         functionName: "totalMinted",
       }).then((v) => {
-        if (!cancelled) setTotalMinted(Number(v));
+        if (!cancelled && !hasMintedRef.current) setTotalMinted(Number(v));
       }).catch(() => {});
     }
 
@@ -275,6 +276,7 @@ export default function MiniPage() {
         throw new Error("Seed not found in Revealed event");
       }
       setMintedSeed(seed);
+      hasMintedRef.current = true;
       setTotalMinted((prev) => (prev !== null ? prev + 1 : null));
       setMintState("success");
     } catch (e: unknown) {
@@ -333,7 +335,7 @@ export default function MiniPage() {
             }}>
               {totalMinted !== null
                 ? <><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{totalMinted.toLocaleString()}</span> / {MAX_SUPPLY.toLocaleString()} MINTED</>
-                : "— / 8,004 MINTED"}
+                : `— / ${MAX_SUPPLY.toLocaleString()} MINTED`}
             </div>
             {!burnLoading && burned > 0n && (
               <div style={{
