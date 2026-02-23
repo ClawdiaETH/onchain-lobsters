@@ -11,7 +11,11 @@ import {
   parseEventLogs,
 } from "viem";
 import { base } from "viem/chains";
+import { Attribution } from "ox/erc8021";
 import { CONTRACT_ADDRESS, MINT_PRICE_ETH } from "../../constants";
+
+// Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
+const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
 
 const MINT_ABI = [
   {
@@ -200,6 +204,7 @@ export default function MiniPage() {
         value: parseEther(MINT_PRICE_ETH),
         account: recipient,
         chain: base,
+        dataSuffix: DATA_SUFFIX,
       });
 
       // Wait for confirmation
