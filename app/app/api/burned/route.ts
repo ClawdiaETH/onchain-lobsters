@@ -11,9 +11,9 @@ const CLAWDIA_BURNED_EVENT = parseAbiItem(
 );
 
 const DEPLOY_BLOCK = 42506485n;
-const CHUNK_SIZE = 5000n;  // Goldsky silently drops results above ~10k under load; stay well under
+const CHUNK_SIZE = 5000n;   // conservative — Goldsky can drop results on larger ranges
 const CACHE_KEY = "lobsters:burned:state";
-const CACHE_TTL = 120; // seconds
+const CACHE_TTL = 300;      // 5 min — state is additive; we extend on every chunk
 
 interface BurnedState {
   total: string;
@@ -28,34 +28,33 @@ export async function GET() {
     let total = 0n;
     let from = DEPLOY_BLOCK;
 
-    // Try to load existing state for incremental scanning
+    // Load existing incremental state
     try {
       const cached = await kv.get<BurnedState>(CACHE_KEY);
       if (cached) {
         total = BigInt(cached.total);
         from = BigInt(cached.lastBlock) + 1n;
 
-        // If we're already up-to-date, return cached total
+        // Already fully caught up — serve immediately
         if (from > latest) {
           return NextResponse.json({ total: cached.total }, {
             headers: { "Cache-Control": "public, max-age=20, stale-while-revalidate=10" },
           });
         }
       }
-    } catch { /* fall through to full RPC scan */ }
+    } catch { /* fall through to full scan */ }
 
-    // Incrementally scan from last processed block to latest
-    // Track the furthest block we successfully scanned so we don't skip chunks on next request
-    let lastSuccessfulBlock = from - 1n;
-
-    while (from <= latest) {
-      const to = from + CHUNK_SIZE - 1n > latest ? latest : from + CHUNK_SIZE - 1n;
+    // Scan new blocks chunk by chunk, persisting after each chunk so we
+    // survive Vercel function timeouts without losing progress
+    let from_ = from;
+    while (from_ <= latest) {
+      const to = from_ + CHUNK_SIZE - 1n > latest ? latest : from_ + CHUNK_SIZE - 1n;
 
       try {
         const logs = await client.getLogs({
           address: CONTRACT_ADDRESS,
           event: CLAWDIA_BURNED_EVENT,
-          fromBlock: from,
+          fromBlock: from_,
           toBlock: to,
         });
 
@@ -63,27 +62,28 @@ export async function GET() {
           total += log.args.clawdiaAmount ?? 0n;
         }
 
-        lastSuccessfulBlock = to;
+        // ✅ Persist after every successful chunk — survives timeouts
+        const state: BurnedState = { total: total.toString(), lastBlock: to.toString() };
+        await kv.set(CACHE_KEY, state, { ex: CACHE_TTL });
       } catch (chunkErr) {
-        // Log chunk failure but continue — we'll retry this range on the next request
-        // by not advancing lastSuccessfulBlock past the failed chunk
-        console.error(`burned: chunk ${from}-${to} failed:`, chunkErr);
-        break; // stop here; next request will retry from lastSuccessfulBlock + 1
+        console.error(`burned: chunk ${from_}-${to} failed:`, chunkErr);
+        // Stop here; next request retries from current lastBlock + 1
+        break;
       }
 
-      from = to + 1n;
+      from_ = to + 1n;
     }
 
-    const state: BurnedState = { total: total.toString(), lastBlock: lastSuccessfulBlock.toString() };
-
-    // Persist state — on next request we resume from lastSuccessfulBlock + 1
-    try { await kv.set(CACHE_KEY, state, { ex: CACHE_TTL }); } catch { /* non-fatal */ }
-
-    return NextResponse.json({ total: state.total }, {
+    return NextResponse.json({ total: total.toString() }, {
       headers: { "Cache-Control": "public, max-age=20, stale-while-revalidate=10" },
     });
   } catch (e) {
     console.error("burned route error:", e);
+    // Try to serve stale cache rather than a hard error
+    try {
+      const cached = await kv.get<BurnedState>(CACHE_KEY);
+      if (cached) return NextResponse.json({ total: cached.total }, { status: 200 });
+    } catch { /* give up */ }
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }
