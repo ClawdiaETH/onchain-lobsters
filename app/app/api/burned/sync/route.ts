@@ -22,6 +22,10 @@ const CHUNK_SIZE = 5000n;
 const CACHE_KEY = "lobsters:burned:state";
 const CACHE_TTL = 86400; // 24h — state is additive, safe to keep long
 
+// Public Base RPC for block number only — immune to Goldsky rate-limit staleness.
+// Goldsky is used for getLogs (better throughput) but can return stale block numbers under load.
+const PUBLIC_BASE_RPC = "https://mainnet.base.org";
+
 interface BurnedState {
   total: string;
   lastBlock: string;
@@ -29,8 +33,11 @@ interface BurnedState {
 
 export async function GET() {
   try {
-    const client = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL || undefined) });
-    const latest = await client.getBlockNumber();
+    // Use public RPC for block number — Goldsky can return stale numbers under load,
+    // causing the scan to think it's already up-to-date when it isn't.
+    const blockClient = createPublicClient({ chain: base, transport: http(PUBLIC_BASE_RPC) });
+    const logsClient  = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL || undefined) });
+    const latest = await blockClient.getBlockNumber();
 
     let total = 0n;
     let from = DEPLOY_BLOCK;
@@ -54,7 +61,7 @@ export async function GET() {
       const to = from_ + CHUNK_SIZE - 1n > latest ? latest : from_ + CHUNK_SIZE - 1n;
 
       try {
-        const logs = await client.getLogs({
+        const logs = await logsClient.getLogs({
           address: CONTRACT_ADDRESS,
           event: CLAWDIA_BURNED_EVENT,
           fromBlock: from_,
