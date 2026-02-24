@@ -11,7 +11,7 @@ const CLAWDIA_BURNED_EVENT = parseAbiItem(
 );
 
 const DEPLOY_BLOCK = 42506485n;
-const CHUNK_SIZE = 18000n; // stay comfortably under Goldsky's ~20k limit
+const CHUNK_SIZE = 5000n;  // Goldsky silently drops results above ~10k under load; stay well under
 const CACHE_KEY = "lobsters:burned:state";
 const CACHE_TTL = 120; // seconds
 
@@ -42,29 +42,41 @@ export async function GET() {
           });
         }
       }
-    } catch { /* fall through to RPC scan */ }
+    } catch { /* fall through to full RPC scan */ }
 
     // Incrementally scan from last processed block to latest
+    // Track the furthest block we successfully scanned so we don't skip chunks on next request
+    let lastSuccessfulBlock = from - 1n;
+
     while (from <= latest) {
       const to = from + CHUNK_SIZE - 1n > latest ? latest : from + CHUNK_SIZE - 1n;
 
-      const logs = await client.getLogs({
-        address: CONTRACT_ADDRESS,
-        event: CLAWDIA_BURNED_EVENT,
-        fromBlock: from,
-        toBlock: to,
-      });
+      try {
+        const logs = await client.getLogs({
+          address: CONTRACT_ADDRESS,
+          event: CLAWDIA_BURNED_EVENT,
+          fromBlock: from,
+          toBlock: to,
+        });
 
-      for (const log of logs) {
-        total += log.args.clawdiaAmount ?? 0n;
+        for (const log of logs) {
+          total += log.args.clawdiaAmount ?? 0n;
+        }
+
+        lastSuccessfulBlock = to;
+      } catch (chunkErr) {
+        // Log chunk failure but continue — we'll retry this range on the next request
+        // by not advancing lastSuccessfulBlock past the failed chunk
+        console.error(`burned: chunk ${from}-${to} failed:`, chunkErr);
+        break; // stop here; next request will retry from lastSuccessfulBlock + 1
       }
 
       from = to + 1n;
     }
 
-    const state: BurnedState = { total: total.toString(), lastBlock: latest.toString() };
+    const state: BurnedState = { total: total.toString(), lastBlock: lastSuccessfulBlock.toString() };
 
-    // Persist state for incremental updates
+    // Persist state — on next request we resume from lastSuccessfulBlock + 1
     try { await kv.set(CACHE_KEY, state, { ex: CACHE_TTL }); } catch { /* non-fatal */ }
 
     return NextResponse.json({ total: state.total }, {
