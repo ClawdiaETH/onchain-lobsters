@@ -164,8 +164,8 @@ export default function GalleryClient({ lobsters, total }: Props) {
               <label
                 style={{
                   fontFamily: MONO,
-                  fontSize: 9,
-                  color: "#4A4A6A",
+                  fontSize: 10,
+                  color: "#8888A8",
                   letterSpacing: "0.12em",
                   display: "block",
                   marginBottom: 4,
@@ -185,7 +185,7 @@ export default function GalleryClient({ lobsters, total }: Props) {
                   background: "#050509",
                   border: `1px solid ${activeFilters[f.key] ? "#C84820" : "#1A1A2E"}`,
                   borderRadius: 3,
-                  color: activeFilters[f.key] ? "#E8E8F2" : "#4A4A6A",
+                  color: activeFilters[f.key] ? "#E8E8F2" : "#8888A8",
                   fontFamily: MONO,
                   fontSize: 10,
                   padding: "5px 6px",
@@ -213,7 +213,7 @@ export default function GalleryClient({ lobsters, total }: Props) {
         style={{
           fontFamily: MONO,
           fontSize: 11,
-          color: "#4A4A6A",
+          color: "#8888A8",
           letterSpacing: "0.12em",
           marginBottom: 16,
           display: "flex",
@@ -233,7 +233,7 @@ export default function GalleryClient({ lobsters, total }: Props) {
             </>
           )}
         </span>
-        <span style={{ color: "#2A2A4A", fontSize: 10 }}>{PER_PAGE}/PAGE</span>
+        <span style={{ color: "#6A6A8A", fontSize: 10 }}>{PER_PAGE}/PAGE</span>
       </div>
 
       {/* ── Grid ── */}
@@ -439,7 +439,7 @@ function GalleryCard({
           style={{
             fontFamily: MONO,
             fontSize: 11,
-            color: "#8888A8",
+            color: "#AAAACC",
             marginTop: 3,
             letterSpacing: "0.08em",
           }}

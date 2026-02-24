@@ -26,7 +26,7 @@ export default async function GalleryPage() {
   }));
 
   return (
-    <div style={{ minHeight: "100vh", background: "#070710" }}>
+    <div style={{ minHeight: "100vh" }}>
       {/* Page header */}
       <div className="gallery-header">
         <div>
@@ -45,12 +45,12 @@ export default async function GalleryPage() {
             style={{
               fontFamily: MONO,
               fontSize: 11,
-              color: "#4A4A6A",
+              color: "#8888A8",
               letterSpacing: "0.12em",
               marginTop: 6,
             }}
           >
-            <a href="/" style={{ color: "#4A4A6A", textDecoration: "none" }}>
+            <a href="/" style={{ color: "#8888A8", textDecoration: "none" }}>
               ← BACK TO HOME
             </a>
           </div>
@@ -59,12 +59,12 @@ export default async function GalleryPage() {
           style={{
             fontFamily: MONO,
             fontSize: 12,
-            color: "#4A4A6A",
+            color: "#8888A8",
             letterSpacing: "0.12em",
             textAlign: "right",
           }}
         >
-          <div style={{ color: "#8888A8" }}>
+          <div style={{ color: "#AAAACC" }}>
             {total.toLocaleString()} / {MAX_SUPPLY.toLocaleString()} MINTED
           </div>
           <div style={{ marginTop: 4 }}>
