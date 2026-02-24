@@ -36,7 +36,7 @@ def get_secret(key):
 def post_x(text):
     script = os.path.expanduser("~/clawd/skills/x-api/scripts/x-post.mjs")
     result = subprocess.run(
-        ["node", script, text],
+        ["/opt/homebrew/bin/node", script, text],
         capture_output=True, text=True, timeout=60
     )
     print(f"X stdout: {result.stdout.strip()}")

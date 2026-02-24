@@ -2,6 +2,7 @@ import Link from "next/link";
 import GalleryGrid from "@/components/GalleryGrid";
 import HeroMosaic from "@/components/HeroMosaic";
 import TotalBurned from "@/components/TotalBurned";
+import MintedCount from "@/components/MintedCount";
 import { MINT_PRICE_ETH, MAX_SUPPLY } from "@/constants";
 import { seedToTraits } from "@/lib/traits";
 import { renderLobsterSVG } from "@/lib/renderer";
@@ -98,7 +99,7 @@ export default async function HomePage() {
           }}>
             <span><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{MINT_PRICE_ETH}</span> ETH</span>
             <span>·</span>
-            <span><span style={{ color: "#E8E8F2", fontWeight: 700 }}>{total.toLocaleString()}</span> / {MAX_SUPPLY.toLocaleString()} MINTED</span>
+            <span><span style={{ color: "#E8E8F2", fontWeight: 700 }}><MintedCount initialTotal={total} /></span> / {MAX_SUPPLY.toLocaleString()} MINTED</span>
             <span>·</span>
             <TotalBurned />
           </div>
@@ -115,7 +116,7 @@ export default async function HomePage() {
         {[
           { label: "MINT PRICE", value: `${MINT_PRICE_ETH} ETH` },
           { label: "SUPPLY",     value: `${MAX_SUPPLY.toLocaleString()}` },
-          { label: "MINTED",     value: `${total.toLocaleString()}` },
+          { label: "MINTED",     value: total.toLocaleString() },
           { label: "ONCHAIN",    value: "100%" },
           { label: "IPFS",       value: "NONE" },
           { label: "BURN TOKEN", value: "$CLAWDIA" },
@@ -132,7 +133,7 @@ export default async function HomePage() {
               fontSize: 14, color: stat.label === "BURN TOKEN" ? "#C84820" : "#E8E8F2",
               letterSpacing: "0.04em",
             }}>
-              {stat.value}
+              {stat.label === "MINTED" ? <MintedCount initialTotal={total} /> : stat.value}
             </div>
           </div>
         ))}

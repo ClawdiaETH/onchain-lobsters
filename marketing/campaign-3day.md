@@ -48,7 +48,7 @@
 ---
 
 ## Day 1 — Slot 7 (Hour 12)
-**Status:** [ ]
+**Status:** [X] X: https://x.com/i/status/2025935800068603987 | FC: 0x0d9cce650f53e3d9a07064bc48d0694c75a555e4
 **Angle:** Rarity breakdown
 **X:** Onchain Lobsters has 8 mutations, 8 scenes, 11 accessories, specials like Celestial / Infernal / Ghost (~14% combined). All rendered in Solidity. All burned into the blockchain. Rarity is real, not claimed. Every mint burns $CLAWDIA. onchainlobsters.xyz
 **FC:** Let me break down the traits. 8 mutations: Classic Red, Ocean Blue, Melanistic, Albino, Yellow, Calico, Cotton Candy, Burnt Sienna. 8 scenes: Open Water, Kelp Forest, Coral Reef, Volcanic Vent, Shipwreck, Tide Pool, Ocean Floor, The Abyss. 11 accessories. 7 eye types. 5 claw variants. 4 markings. Special overrides: Ghost, Infernal, Celestial, Nounish, Doodled (~14% combined). Every combination rendered in Solidity SVG. Every mint burns $CLAWDIA. onchainlobsters.xyz | channel: ethereum

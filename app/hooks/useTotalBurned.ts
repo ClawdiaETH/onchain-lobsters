@@ -26,7 +26,7 @@ export function useTotalBurned(): { total: bigint; loading: boolean } {
     }
 
     fetch();
-    const id = setInterval(fetch, 30_000);
+    const id = setInterval(fetch, 15_000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
