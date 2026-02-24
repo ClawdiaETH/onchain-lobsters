@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/burned/sync",
+      "schedule": "* * * * *"
+    }
+  ],
+  "functions": {
+    "app/api/burned/sync/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
