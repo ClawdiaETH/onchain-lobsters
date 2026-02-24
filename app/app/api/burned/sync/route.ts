@@ -19,8 +19,8 @@ const CLAWDIA_BURNED_EVENT = parseAbiItem(
 
 const DEPLOY_BLOCK = 42506485n;
 const CHUNK_SIZE = 5000n;
-export const CACHE_KEY = "lobsters:burned:state";
-export const CACHE_TTL = 86400; // 24h — state is additive, safe to keep long
+const CACHE_KEY = "lobsters:burned:state";
+const CACHE_TTL = 86400; // 24h — state is additive, safe to keep long
 
 interface BurnedState {
   total: string;
