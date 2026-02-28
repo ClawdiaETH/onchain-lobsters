@@ -12,6 +12,7 @@ import { kv } from "@vercel/kv";
 import { CONTRACT_ADDRESS } from "@/constants";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic"; // never cache — this is a cron that must always run fresh
 
 const CLAWDIA_BURNED_EVENT = parseAbiItem(
   "event ClawdiaBurned(uint256 indexed tokenId, uint256 clawdiaAmount)"

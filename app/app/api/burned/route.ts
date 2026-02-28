@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { kv } from "@vercel/kv";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic"; // always read fresh from KV
 
 const CACHE_KEY = "lobsters:burned:state";
 
