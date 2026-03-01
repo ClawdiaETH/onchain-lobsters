@@ -8,11 +8,31 @@ const MONO = "'Courier New',monospace";
 
 export default function Nav() {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { connect, isPending: isConnecting, error: connectError, reset: resetConnect } = useConnect();
   const { disconnect } = useDisconnect();
-  const connectors = useConnectors();
+  const allConnectors = useConnectors();
   const [showPicker, setShowPicker] = useState(false);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Filter out injected connector when no browser wallet is present (avoids dead option on mobile)
+  const hasInjectedProvider = typeof window !== "undefined" && !!(window as typeof window & { ethereum?: unknown }).ethereum;
+  const connectors = allConnectors.filter(c =>
+    !c.name.toLowerCase().includes("injected") || hasInjectedProvider
+  );
+
+  // Clear error when picker closes
+  useEffect(() => {
+    if (!showPicker) {
+      resetConnect?.();
+      setConnectingId(null);
+    }
+  }, [showPicker]);
+
+  // Close picker when connection succeeds
+  useEffect(() => {
+    if (isConnected) setShowPicker(false);
+  }, [isConnected]);
 
   // Close picker on outside click
   useEffect(() => {
@@ -78,6 +98,7 @@ export default function Nav() {
         <div ref={pickerRef} style={{ position: "relative", marginLeft: 4 }}>
           <ConnectButton
             isConnected={isConnected}
+            isConnecting={isConnecting && showPicker}
             address={address}
             onClick={() => isConnected ? disconnect() : setShowPicker(p => !p)}
           />
@@ -98,16 +119,43 @@ export default function Nav() {
               }}>
                 CONNECT WALLET
               </div>
-              {connectors.map(connector => (
-                <WalletOption
-                  key={connector.uid}
-                  name={connectorLabel(connector.name)}
-                  onClick={() => {
-                    connect({ connector });
-                    setShowPicker(false);
-                  }}
-                />
-              ))}
+
+              {/* Connection error */}
+              {connectError && (
+                <div style={{
+                  padding: "8px 12px",
+                  fontFamily: MONO, fontSize: 10, color: "#E05050",
+                  letterSpacing: "0.10em", borderBottom: "1px solid #1A1A2E",
+                  background: "#140808",
+                }}>
+                  ⚠ {connectError.message.slice(0, 80)}
+                </div>
+              )}
+
+              {connectors.length === 0 ? (
+                <div style={{
+                  padding: "12px 14px",
+                  fontFamily: MONO, fontSize: 11, color: "#6A6A8A",
+                  letterSpacing: "0.10em",
+                }}>
+                  No wallet detected.<br />Install MetaMask or Coinbase Wallet.
+                </div>
+              ) : (
+                connectors.map(connector => (
+                  <WalletOption
+                    key={connector.uid}
+                    name={connectorLabel(connector.name)}
+                    isLoading={isConnecting && connectingId === connector.uid}
+                    onClick={() => {
+                      setConnectingId(connector.uid);
+                      connect({ connector });
+                      // Close picker on success (wagmi sets isConnected)
+                      // Keep open on error so user can see it
+                    }}
+                  />
+                ))
+              )}
+
               <div style={{
                 padding: "8px 12px",
                 fontFamily: MONO, fontSize: 10, color: "#3A3A5A",
@@ -131,13 +179,19 @@ function connectorLabel(name: string): string {
 }
 
 function ConnectButton({
-  isConnected, address, onClick,
+  isConnected, isConnecting, address, onClick,
 }: {
   isConnected: boolean;
+  isConnecting?: boolean;
   address?: string;
   onClick: () => void;
 }) {
   const [hov, setHov] = useState(false);
+  const label = isConnected && address
+    ? `${address.slice(0, 6)}…${address.slice(-4)}`
+    : isConnecting
+      ? "CONNECTING…"
+      : "CONNECT";
   return (
     <button
       onClick={onClick}
@@ -146,36 +200,42 @@ function ConnectButton({
       style={{
         fontFamily: MONO, fontSize: 13, letterSpacing: "0.14em",
         padding: "7px 16px",
-        background: isConnected ? "rgba(200,72,32,0.12)" : hov ? "#0E0E1E" : "transparent",
-        color: isConnected ? "#C84820" : hov ? "#E8E8F2" : "#8888A8",
-        border: `1px solid ${isConnected ? "#C84820" : hov ? "#282840" : "#1A1A2E"}`,
+        background: isConnected ? "rgba(200,72,32,0.12)" : isConnecting ? "rgba(200,72,32,0.06)" : hov ? "#0E0E1E" : "transparent",
+        color: isConnected ? "#C84820" : isConnecting ? "#C84820" : hov ? "#E8E8F2" : "#8888A8",
+        border: `1px solid ${isConnected || isConnecting ? "#C84820" : hov ? "#282840" : "#1A1A2E"}`,
         borderRadius: 3, cursor: "pointer",
         transition: "all 0.15s",
+        opacity: isConnecting ? 0.7 : 1,
       }}
     >
-      {isConnected && address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "CONNECT"}
+      {label}
     </button>
   );
 }
 
-function WalletOption({ name, onClick }: { name: string; onClick: () => void }) {
+function WalletOption({ name, onClick, isLoading }: { name: string; onClick: () => void; isLoading?: boolean }) {
   const [hov, setHov] = useState(false);
   return (
     <button
       onClick={onClick}
+      disabled={isLoading}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        display: "block", width: "100%", textAlign: "left",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        width: "100%", textAlign: "left",
         padding: "10px 14px",
         fontFamily: MONO, fontSize: 12, letterSpacing: "0.10em",
-        color: hov ? "#E8E8F2" : "#8888A8",
-        background: hov ? "#0E0E1E" : "transparent",
-        border: "none", cursor: "pointer",
+        color: isLoading ? "#C84820" : hov ? "#E8E8F2" : "#8888A8",
+        background: isLoading ? "rgba(200,72,32,0.06)" : hov ? "#0E0E1E" : "transparent",
+        border: "none", cursor: isLoading ? "default" : "pointer",
         transition: "all 0.12s",
       }}
     >
-      {name} →
+      <span>{name}</span>
+      <span style={{ opacity: isLoading ? 1 : 0.5 }}>
+        {isLoading ? "…" : "→"}
+      </span>
     </button>
   );
 }
