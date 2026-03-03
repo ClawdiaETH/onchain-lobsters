@@ -5,6 +5,7 @@ import LobsterCanvas from "./LobsterCanvas";
 import TraitSheet from "./TraitSheet";
 import { seedToTraits } from "@/lib/traits";
 import { MUTATIONS, SCENES } from "@/lib/renderer";
+import { MAX_SUPPLY } from "@/constants";
 import type { Traits } from "@/lib/renderer";
 
 const MONO = "'Courier New',monospace";
@@ -44,7 +45,7 @@ export default function GalleryGrid({ seeds, total }: Props) {
           GALLERY
         </div>
         <div style={{ fontFamily: MONO, fontSize: 11, color: "#4A4A6A", letterSpacing: "0.12em" }}>
-          {total} / 8,004 MINTED
+          {total} / {MAX_SUPPLY.toLocaleString()} MINTED
         </div>
       </div>
 

@@ -174,7 +174,7 @@ export default async function LobsterPage({ params }: Props) {
               LOBSTER #{num} NOT YET MINTED
             </h1>
             <p style={{ fontSize: 12, color: TEXT_SEC, marginBottom: 32, letterSpacing: "0.1em" }}>
-              8,004 LOBSTERS TOTAL · {id > 1 ? `TOKENS 1–${id - 1} EXIST` : "BE THE FIRST"}
+              804 LOBSTERS TOTAL · {id > 1 ? `TOKENS 1–${id - 1} EXIST` : "BE THE FIRST"}
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <a href={OPENSEA_COLLECTION} target="_blank" rel="noreferrer" style={{

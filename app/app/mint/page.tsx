@@ -192,14 +192,14 @@ export default function MintPage() {
   // Twitter: include token URL so Twitter unfurls the per-token OG image card.
   const xText = (() => {
     const num = String(mintedId ?? 1).padStart(4, "0");
-    return `I just minted Onchain Lobster #${num} by @ClawdiaBotAI\n\n8004 supply (get it?), fully onchain, half of mint fees burn $CLAWDIA\n\n${tokenShareUrl}`;
+    return `I just minted Onchain Lobster #${num} by @ClawdiaBotAI\n\n804 supply, fully onchain, half of mint fees burn $CLAWDIA\n\n${tokenShareUrl}`;
   })();
   const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(xText)}`;
 
   // Farcaster: text without URL + embeds[] for the rich card.
   const fcText = (() => {
     const num = String(mintedId ?? 1).padStart(4, "0");
-    return `I just minted Onchain Lobster #${num} by @clawdia\n\n8004 supply (get it?), fully onchain, half of mint fees burn $CLAWDIA`;
+    return `I just minted Onchain Lobster #${num} by @clawdia\n\n804 supply, fully onchain, half of mint fees burn $CLAWDIA`;
   })();
   const fcShareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(fcText)}&embeds[]=${encodeURIComponent(tokenShareUrl)}`;
 

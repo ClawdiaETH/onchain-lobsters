@@ -69,7 +69,7 @@ export async function GET() {
               textAlign: "center",
             }}
           >
-            8,004 · BASE · BURNS $CLAWDIA
+            804 · BASE · BURNS $CLAWDIA
           </span>
           <span
             style={{

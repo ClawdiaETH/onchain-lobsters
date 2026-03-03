@@ -65,7 +65,7 @@ export default function Nav() {
           🦞 ONCHAIN LOBSTERS
         </div>
         <div style={{ fontFamily: MONO, fontSize: 13, color: "#6A6A8A", letterSpacing: "0.14em", marginTop: 3 }}>
-          BASE · 8,004 · BURNS $CLAWDIA
+          BASE · 804 · BURNS $CLAWDIA
         </div>
       </Link>
 

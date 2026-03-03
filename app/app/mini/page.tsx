@@ -318,7 +318,7 @@ export default function MiniPage() {
         <>
           <div style={styles.title}>ONCHAIN LOBSTERS</div>
           <div style={styles.subtitle}>
-            8,004 pixel lobsters on Base.
+            804 pixel lobsters on Base.
             <br />
             Fully onchain. No IPFS.
             <br />

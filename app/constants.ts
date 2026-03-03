@@ -10,7 +10,7 @@ export const TREASURY_ADDRESS = "0xf17b5dD382B048Ff4c05c1C9e4E24cfC5C6adAd9" as 
 // Mint: user pays ETH → contract swaps half for $CLAWDIA → burns it
 export const MINT_PRICE_ETH = "0.005"; // ETH total (half swapped+burned, half protocol)
 
-export const MAX_SUPPLY = 8004;
+export const MAX_SUPPLY = 804;
 export const COMMIT_WINDOW_BLOCKS = 100; // max blocks before reveal expires
 export const MIN_REVEAL_BLOCKS = 1;      // must wait at least 1 block
 

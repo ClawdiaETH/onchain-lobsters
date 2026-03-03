@@ -10,7 +10,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "Gallery — Onchain Lobsters",
   description:
-    "All 8,004 fully onchain pixel lobsters on Base. Every mint burns $CLAWDIA.",
+    "All 804 fully onchain pixel lobsters on Base. Every mint burns $CLAWDIA.",
 };
 
 const MONO = "'Courier New',monospace";

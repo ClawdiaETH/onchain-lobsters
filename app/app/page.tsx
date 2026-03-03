@@ -69,7 +69,7 @@ export default async function HomePage() {
             margin: "0 0 36px 0", letterSpacing: "0.04em",
             maxWidth: 360,
           }}>
-            8,004 generative pixel lobsters. Every sprite lives onchain.
+            804 generative pixel lobsters. Every sprite lives onchain.
             Minting burns $CLAWDIA forever. Commit-reveal randomness. No IPFS.
           </p>
 
@@ -145,7 +145,7 @@ export default async function HomePage() {
           { icon: "🎨", title: "FULLY ONCHAIN",    body: "Every pixel rendered in Solidity. No IPFS, no external deps, no rugs." },
           { icon: "🔥", title: "BURNS $CLAWDIA",   body: "Half your mint goes to buying and burning $CLAWDIA on Uniswap V4." },
           { icon: "🎲", title: "COMMIT-REVEAL",    body: "Provably fair. Your seed uses a future blockhash — nobody can snipe." },
-          { icon: "🦞", title: "8,004 LOBSTERS",   body: "40×52 pixels. 8 mutations, 7 scenes, 11 accessories, 5 specials." },
+          { icon: "🦞", title: "804 LOBSTERS",      body: "40×52 pixels. 8 mutations, 7 scenes, 11 accessories, 5 specials." },
         ].map(f => (
           <div key={f.title} style={{
             background: "#07070F", padding: "28px 24px",

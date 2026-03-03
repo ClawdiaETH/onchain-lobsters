@@ -1,6 +1,6 @@
 export default function Ticker() {
   const items = [
-    "🦞 ONCHAIN LOBSTERS", "8,004 SUPPLY", "FULLY ONCHAIN", "40×52 PIXELS",
+    "🦞 ONCHAIN LOBSTERS", "804 SUPPLY", "FULLY ONCHAIN", "40×52 PIXELS",
     "BURNS $CLAWDIA", "BASE CHAIN", "RRLE COMPRESSED", "COMMIT-REVEAL MINT", "NO IPFS", "CC0",
   ];
   const text = items.join(" · ");

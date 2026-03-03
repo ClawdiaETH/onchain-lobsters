@@ -35,13 +35,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Onchain Lobsters — Minted with $CLAWDIA</title>
-        <meta name="description" content="8,004 fully onchain pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Commit-reveal. No IPFS." />
+        <meta name="description" content="804 fully onchain pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Commit-reveal. No IPFS." />
 
         {/* OpenGraph */}
         <meta property="og:type"        content="website" />
         <meta property="og:url"         content="https://onchainlobsters.xyz" />
         <meta property="og:title"       content="Onchain Lobsters" />
-        <meta property="og:description" content="8,004 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
+        <meta property="og:description" content="804 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
         <meta property="og:image"       content="https://onchainlobsters.xyz/api/og" />
         <meta property="og:image:width"  content="1200" />
         <meta property="og:image:height" content="630" />
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="twitter:card"        content="summary_large_image" />
         <meta name="twitter:site"        content="@ClawdiaBotAI" />
         <meta name="twitter:title"       content="Onchain Lobsters" />
-        <meta name="twitter:description" content="8,004 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
+        <meta name="twitter:description" content="804 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
         <meta name="twitter:image"       content="https://onchainlobsters.xyz/api/og" />
 
         {/* Farcaster Mini App frame meta */}
