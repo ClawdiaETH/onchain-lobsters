@@ -1,54 +1,43 @@
 /**
  * /api/burned/sync — Vercel cron job (every minute).
  * Incrementally scans ClawdiaBurned events and keeps KV state warm.
- * maxDuration: 60s (set in vercel.json) so we can catch up from cold start
- * in a single run regardless of chain history length.
  */
-
 import { NextResponse } from "next/server";
 import { createPublicClient, http, parseAbiItem } from "viem";
 import { base } from "viem/chains";
-import { kv } from "@vercel/kv";
+import { kvGet, kvSet } from "@/lib/kv";
 import { CONTRACT_ADDRESS } from "@/constants";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic"; // never cache — this is a cron that must always run fresh
+export const dynamic = "force-dynamic";
 
 const CLAWDIA_BURNED_EVENT = parseAbiItem(
   "event ClawdiaBurned(uint256 indexed tokenId, uint256 clawdiaAmount)"
 );
 
 const DEPLOY_BLOCK = 42506485n;
-const CHUNK_SIZE = 5000n;
-const CACHE_KEY = "lobsters:burned:state";
-const CACHE_TTL = 604800; // 7 days — state is additive, safe to keep indefinitely
+const CHUNK_SIZE   = 5000n;
+const CACHE_KEY    = "lobsters:burned:state";
+const CACHE_TTL    = 604800; // 7 days
 
-// Public Base RPC for block number only — immune to Goldsky rate-limit staleness.
-// Goldsky is used for getLogs (better throughput) but can return stale block numbers under load.
 const PUBLIC_BASE_RPC = "https://mainnet.base.org";
 
-interface BurnedState {
-  total: string;
-  lastBlock: string;
-}
+interface BurnedState { total: string; lastBlock: string; }
 
 export async function GET() {
   try {
-    // Use public RPC for block number — Goldsky can return stale numbers under load,
-    // causing the scan to think it's already up-to-date when it isn't.
     const blockClient = createPublicClient({ chain: base, transport: http(PUBLIC_BASE_RPC) });
     const logsClient  = createPublicClient({ chain: base, transport: http(process.env.BASE_RPC_URL || undefined) });
     const latest = await blockClient.getBlockNumber();
 
     let total = 0n;
-    let from = DEPLOY_BLOCK;
+    let from  = DEPLOY_BLOCK;
 
-    // Resume from last saved position
     try {
-      const cached = await kv.get<BurnedState>(CACHE_KEY);
-      if (cached) {
+      const cached = await kvGet<BurnedState>(CACHE_KEY);
+      if (cached?.total) {
         total = BigInt(cached.total);
-        from = BigInt(cached.lastBlock) + 1n;
+        from  = BigInt(cached.lastBlock) + 1n;
         if (from > latest) {
           return NextResponse.json({ ok: true, total: cached.total, upToDate: true });
         }
@@ -60,7 +49,6 @@ export async function GET() {
 
     while (from_ <= latest) {
       const to = from_ + CHUNK_SIZE - 1n > latest ? latest : from_ + CHUNK_SIZE - 1n;
-
       try {
         const logs = await logsClient.getLogs({
           address: CONTRACT_ADDRESS,
@@ -68,19 +56,14 @@ export async function GET() {
           fromBlock: from_,
           toBlock: to,
         });
+        for (const log of logs) total += log.args.clawdiaAmount ?? 0n;
 
-        for (const log of logs) {
-          total += log.args.clawdiaAmount ?? 0n;
-        }
-
-        // Save after every chunk — survives mid-run timeout
-        await kv.set(CACHE_KEY, { total: total.toString(), lastBlock: to.toString() }, { ex: CACHE_TTL });
+        await kvSet(CACHE_KEY, { total: total.toString(), lastBlock: to.toString() }, CACHE_TTL);
         chunksScanned++;
       } catch (chunkErr) {
         console.error(`sync: chunk ${from_}-${to} failed:`, chunkErr);
         break;
       }
-
       from_ = to + 1n;
     }
 
