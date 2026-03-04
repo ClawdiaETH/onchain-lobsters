@@ -1,33 +1,55 @@
 /**
- * Minimal Upstash KV client using direct REST API calls.
- * Replaces @vercel/kv which has proven unreliable in this deployment.
+ * Minimal Upstash KV client using Node.js https (not fetch).
+ * fetch() in Next.js App Router is automatically cached even with cache:'no-store'
+ * in some Vercel deployment configurations. https.request bypasses that entirely.
  */
+import https from "https";
 
-const KV_URL   = process.env.KV_REST_API_URL!;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN!;
+function getEnv() {
+  const url   = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) throw new Error("KV_REST_API_URL / KV_REST_API_TOKEN missing");
+  return { url: new URL(url), token };
+}
 
-function headers() {
-  return { Authorization: `Bearer ${KV_TOKEN}`, "Content-Type": "application/json" };
+function httpsRequest(opts: https.RequestOptions & { body?: string }): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const req = https.request(opts, (res) => {
+      let data = "";
+      res.on("data", (chunk) => { data += chunk; });
+      res.on("end",  () => resolve(data));
+    });
+    req.on("error", reject);
+    if (opts.body) req.write(opts.body);
+    req.end();
+  });
 }
 
 export async function kvGet<T>(key: string): Promise<T | null> {
-  const res = await fetch(`${KV_URL}/get/${encodeURIComponent(key)}`, {
-    headers: headers(),
-    cache: "no-store",
+  const { url, token } = getEnv();
+  const raw = await httpsRequest({
+    hostname: url.hostname,
+    path:     `/get/${key}`,
+    method:   "GET",
+    headers:  { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error(`kvGet ${key} → ${res.status}`);
-  const { result } = await res.json();
+  const { result } = JSON.parse(raw);
   if (result === null || result === undefined) return null;
   try { return JSON.parse(result) as T; } catch { return result as T; }
 }
 
 export async function kvSet(key: string, value: unknown, exSeconds: number): Promise<void> {
-  const serialized = typeof value === "string" ? value : JSON.stringify(value);
-  const res = await fetch(KV_URL, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(["SET", key, serialized, "EX", String(exSeconds)]),
-    cache: "no-store",
+  const { url, token } = getEnv();
+  const body = JSON.stringify(["SET", key, typeof value === "string" ? value : JSON.stringify(value), "EX", String(exSeconds)]);
+  await httpsRequest({
+    hostname: url.hostname,
+    path:     "/",
+    method:   "POST",
+    headers:  {
+      Authorization:  `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(body),
+    },
+    body,
   });
-  if (!res.ok) throw new Error(`kvSet ${key} → ${res.status}`);
 }
