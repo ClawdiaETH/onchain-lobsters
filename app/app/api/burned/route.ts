@@ -25,9 +25,9 @@ export async function GET() {
         headers: { "Cache-Control": "public, max-age=20, stale-while-revalidate=10" },
       });
     }
-    // KV cold (first deploy before cron has run) — return 0 gracefully
+    // KV cold — return 0 but never cache this so the next request retries immediately
     return NextResponse.json({ total: "0" }, {
-      headers: { "Cache-Control": "public, max-age=5" },
+      headers: { "Cache-Control": "no-store" },
     });
   } catch (e) {
     console.error("burned GET error:", e);

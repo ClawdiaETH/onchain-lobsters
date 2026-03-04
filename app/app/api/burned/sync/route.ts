@@ -21,7 +21,7 @@ const CLAWDIA_BURNED_EVENT = parseAbiItem(
 const DEPLOY_BLOCK = 42506485n;
 const CHUNK_SIZE = 5000n;
 const CACHE_KEY = "lobsters:burned:state";
-const CACHE_TTL = 86400; // 24h — state is additive, safe to keep long
+const CACHE_TTL = 604800; // 7 days — state is additive, safe to keep indefinitely
 
 // Public Base RPC for block number only — immune to Goldsky rate-limit staleness.
 // Goldsky is used for getLogs (better throughput) but can return stale block numbers under load.
