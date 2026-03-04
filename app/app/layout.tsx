@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta property="og:url"         content="https://onchainlobsters.xyz" />
         <meta property="og:title"       content="Onchain Lobsters" />
         <meta property="og:description" content="804 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
-        <meta property="og:image"       content="https://onchainlobsters.xyz/api/og" />
+        <meta property="og:image"       content="https://onchainlobsters.xyz/api/og?v=804" />
         <meta property="og:image:width"  content="1200" />
         <meta property="og:image:height" content="630" />
 
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="twitter:site"        content="@ClawdiaBotAI" />
         <meta name="twitter:title"       content="Onchain Lobsters" />
         <meta name="twitter:description" content="804 pixel lobsters on Base. Half your mint fee burns $CLAWDIA. Fully onchain. No IPFS." />
-        <meta name="twitter:image"       content="https://onchainlobsters.xyz/api/og" />
+        <meta name="twitter:image"       content="https://onchainlobsters.xyz/api/og?v=804" />
 
         {/* Farcaster Mini App frame meta */}
         <meta name="fc:frame" content='{"version":"1","imageUrl":"https://onchainlobsters.xyz/api/og/1","button":{"title":"Mint a Lobster 🦞","action":{"type":"launch_frame","name":"Onchain Lobsters","url":"https://onchainlobsters.xyz/mini","splashImageUrl":"https://onchainlobsters.xyz/api/og/1","splashBackgroundColor":"#0a0a0a"}}}' />
