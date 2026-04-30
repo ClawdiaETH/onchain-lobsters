@@ -150,12 +150,13 @@ print(f"Posting: {slot['header']}")
 print(f"X text ({len(slot['x_text'])} chars): {slot['x_text'][:80]}...")
 print(f"FC channel: {slot['fc_channel']}")
 
-# Post X
+# Post X (non-fatal — Twitter auth may be expired)
 x_url = post_x(slot["x_text"])
 if not x_url:
-    print("ERROR: X post failed")
-    sys.exit(1)
-print(f"X posted: {x_url}")
+    print("⚠️  X post failed (auth expired?) — continuing to Farcaster")
+    x_url = "X-SKIPPED"
+else:
+    print(f"X posted: {x_url}")
 
 # Post Farcaster
 import time
@@ -163,7 +164,11 @@ time.sleep(3)
 fc_hash = post_farcaster(slot["fc_text"], slot["fc_channel"])
 if not fc_hash:
     print("ERROR: FC post failed")
-    # Don't exit — X post succeeded, mark with partial status
+    if x_url == "X-SKIPPED":
+        # Both failed — don't mark slot, let it retry next run
+        print("Both X and FC failed — slot NOT marked, will retry next run")
+        sys.exit(1)
+    # X succeeded but FC failed
     fc_hash = "FC-FAILED"
 
 # Update campaign file
