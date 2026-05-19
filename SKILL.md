@@ -31,13 +31,24 @@ RPC=https://mainnet.base.org
 
 Two ways to mint. Commit-reveal is the canonical experience; direct mint is the fast path.
 
+**Required preflight for every mint path:**
+
+```bash
+MINTED=$(cast call $CONTRACT "totalMinted()(uint256)" --rpc-url $RPC | cast --to-dec)
+test "$MINTED" -lt 804 || { echo "Onchain Lobsters is sold out at 804"; exit 1; }
+```
+
+The deployed contract can technically mint up to 8004, so agents must enforce the 804 project cap before direct mint, SeaDrop mint, commit, or reveal.
+
 ### Option A — Direct Mint (fast, single tx)
 
 Bankrbot and other agents should use this. One transaction, no waiting.
 
 ```bash
-# Check mint is active
+# Check mint is active and supply is below the 804 project cap
 cast call $CONTRACT "saleIsActive()(bool)" --rpc-url $RPC
+MINTED=$(cast call $CONTRACT "totalMinted()(uint256)" --rpc-url $RPC | cast --to-dec)
+test "$MINTED" -lt 804 || { echo "Onchain Lobsters is sold out at 804"; exit 1; }
 
 # Mint directly to yourself
 cast send $CONTRACT \
@@ -249,6 +260,11 @@ echo "Salt (save this): $SALT"
 COMMITMENT=$(cast keccak $(cast abi-encode "f(bytes32,address)" $SALT $WALLET))
 echo "Commitment: $COMMITMENT"
 
+# Check project cap before committing. The contract cap is 8004, but the final
+# collection size is 804.
+MINTED=$(cast call $CONTRACT "totalMinted()(uint256)" --rpc-url $RPC | cast --to-dec)
+test "$MINTED" -lt 804 || { echo "Onchain Lobsters is sold out at 804"; exit 1; }
+
 # Commit
 echo "Committing..."
 COMMIT_TX=$(cast send $CONTRACT "commit(bytes32)" $COMMITMENT \
@@ -265,6 +281,10 @@ echo "Commit block: $COMMIT_BLOCK_DEC — waiting for next block..."
 while [ $(cast block-number --rpc-url $RPC) -le $COMMIT_BLOCK_DEC ]; do
   sleep 1
 done
+
+# Re-check project cap before reveal. A commit can be pending while other mints land.
+MINTED=$(cast call $CONTRACT "totalMinted()(uint256)" --rpc-url $RPC | cast --to-dec)
+test "$MINTED" -lt 804 || { echo "Onchain Lobsters is sold out at 804"; exit 1; }
 
 # Reveal
 echo "Revealing..."

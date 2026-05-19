@@ -107,11 +107,17 @@ export default function MintPage() {
   const blocksLeft = useBlockCountdown(pending?.commitBlock ?? null);
   const canReveal = phase === "waiting" && blocksLeft !== null && blocksLeft <= 0;
   const isExpired = phase === "waiting" && blocksLeft !== null && blocksLeft < -COMMIT_WINDOW_BLOCKS;
-  const isMintSoldOut = typeof totalMinted === "bigint" && totalMinted >= BigInt(MAX_SUPPLY);
+  const hasLoadedMintCount = typeof totalMinted === "bigint";
+  const isMintSoldOut = hasLoadedMintCount && totalMinted >= BigInt(MAX_SUPPLY);
+  const canStartMint = hasLoadedMintCount && !isMintSoldOut;
 
   // ── Commit ────────────────────────────────────────────────────────────────
   const handleCommit = useCallback(async () => {
     if (!address) return;
+    if (!hasLoadedMintCount) {
+      setError("Checking mint availability. Try again in a moment.");
+      return;
+    }
     if (isMintSoldOut) {
       setError("The 804-lobster collection is sold out.");
       return;
@@ -119,6 +125,17 @@ export default function MintPage() {
     setPhase("committing");
     setError(null);
     try {
+      const currentMinted = await publicClient!.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: LOBSTERS_ABI,
+        functionName: "totalMinted",
+      }) as bigint;
+      if (currentMinted >= BigInt(MAX_SUPPLY)) {
+        setError("The 804-lobster collection is sold out.");
+        setPhase("idle");
+        return;
+      }
+
       const salt = generateSalt();
       const commitment = computeCommitment(salt, address);
       savePendingCommit(address, { salt, commitment, commitBlock: 0, txHash: "0x" as `0x${string}` });
@@ -132,7 +149,7 @@ export default function MintPage() {
       setError(e.shortMessage ?? e.message ?? "Commit failed");
       setPhase("idle");
     }
-  }, [address, commit, isMintSoldOut, publicClient, reloadPending]);
+  }, [address, commit, hasLoadedMintCount, isMintSoldOut, publicClient, reloadPending]);
 
   // ── Reveal ────────────────────────────────────────────────────────────────
   const handleReveal = useCallback(async () => {
@@ -140,6 +157,17 @@ export default function MintPage() {
     setPhase("revealing");
     setError(null);
     try {
+      const currentMinted = await publicClient!.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: LOBSTERS_ABI,
+        functionName: "totalMinted",
+      }) as bigint;
+      if (currentMinted >= BigInt(MAX_SUPPLY)) {
+        setError("The 804-lobster collection is sold out.");
+        setPhase("waiting");
+        return;
+      }
+
       const txHash = await reveal(pending.salt, address);
       const receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
 
@@ -366,6 +394,16 @@ export default function MintPage() {
                   </div>
                 ))}
               </div>
+              {!hasLoadedMintCount && (
+                <div style={{
+                  fontFamily: MONO, fontSize: 12, color: C.textMuted,
+                  letterSpacing: "0.1em", lineHeight: 1.8,
+                  padding: "12px 14px", marginBottom: 14,
+                  background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 3,
+                }}>
+                  CHECKING MINT AVAILABILITY...
+                </div>
+              )}
               {isMintSoldOut && (
                 <div style={{
                   fontFamily: MONO, fontSize: 12, color: C.gold,
@@ -378,17 +416,17 @@ export default function MintPage() {
               )}
               <button
                 onClick={handleCommit}
-                disabled={isMintSoldOut}
+                disabled={!canStartMint}
                 style={{
                   fontFamily: MONO, fontSize: 13, letterSpacing: "0.18em", fontWeight: 700,
-                  padding: "13px 24px", background: isMintSoldOut ? "transparent" : C.accent, color: isMintSoldOut ? C.textMuted : "#fff",
-                  border: isMintSoldOut ? `1px solid ${C.border}` : "none", borderRadius: 3, cursor: isMintSoldOut ? "not-allowed" : "pointer", width: "100%",
+                  padding: "13px 24px", background: canStartMint ? C.accent : "transparent", color: canStartMint ? "#fff" : C.textMuted,
+                  border: canStartMint ? "none" : `1px solid ${C.border}`, borderRadius: 3, cursor: canStartMint ? "pointer" : "not-allowed", width: "100%",
                   transition: "opacity 0.15s",
                 }}
-                onMouseEnter={e => { if (!isMintSoldOut) e.currentTarget.style.opacity = "0.85"; }}
+                onMouseEnter={e => { if (canStartMint) e.currentTarget.style.opacity = "0.85"; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
               >
-                {isMintSoldOut ? "SOLD OUT" : "MINT (SIGNATURE 1 OF 2)"}
+                {isMintSoldOut ? "SOLD OUT" : hasLoadedMintCount ? "MINT (SIGNATURE 1 OF 2)" : "CHECKING..."}
               </button>
             </div>
           )}
@@ -553,17 +591,18 @@ export default function MintPage() {
               </div>
 
               <button
-                onClick={() => { setPhase("idle"); setMinted(null); setMintedId(null); setRevealTx(null); }}
+                onClick={() => { if (!isMintSoldOut) { setPhase("idle"); setMinted(null); setMintedId(null); setRevealTx(null); } }}
+                disabled={isMintSoldOut}
                 style={{
                   fontFamily: MONO, fontSize: 12, padding: "10px 18px",
-                  background: "transparent", color: C.accent,
-                  border: `1px solid ${C.accent}`, borderRadius: 3, cursor: "pointer",
+                  background: "transparent", color: isMintSoldOut ? C.textMuted : C.accent,
+                  border: `1px solid ${isMintSoldOut ? C.border : C.accent}`, borderRadius: 3, cursor: isMintSoldOut ? "not-allowed" : "pointer",
                   transition: "all 0.15s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(200,72,32,0.1)"; }}
+                onMouseEnter={e => { if (!isMintSoldOut) e.currentTarget.style.background = "rgba(200,72,32,0.1)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
               >
-                MINT ANOTHER
+                {isMintSoldOut ? "SOLD OUT" : "MINT ANOTHER"}
               </button>
             </div>
           )}

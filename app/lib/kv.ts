@@ -17,7 +17,14 @@ function httpsRequest(opts: https.RequestOptions & { body?: string }): Promise<s
     const req = https.request(opts, (res) => {
       let data = "";
       res.on("data", (chunk) => { data += chunk; });
-      res.on("end",  () => resolve(data));
+      res.on("end",  () => {
+        const status = res.statusCode ?? 0;
+        if (status < 200 || status >= 300) {
+          reject(new Error(`KV request failed with HTTP ${status}: ${data.slice(0, 200)}`));
+          return;
+        }
+        resolve(data);
+      });
     });
     req.on("error", reject);
     if (opts.body) req.write(opts.body);
@@ -29,7 +36,7 @@ export async function kvGet<T>(key: string): Promise<T | null> {
   const { url, token } = getEnv();
   const raw = await httpsRequest({
     hostname: url.hostname,
-    path:     `/get/${key}`,
+    path:     `/get/${encodeURIComponent(key)}`,
     method:   "GET",
     headers:  { Authorization: `Bearer ${token}` },
   });

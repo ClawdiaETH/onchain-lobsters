@@ -29,6 +29,7 @@ const PREVIEW_SEEDS: bigint[] = [
 
 // Base Builder Code — attributes all mints to Onchain Lobsters on base.dev
 const DATA_SUFFIX = Attribution.toDataSuffix({ codes: ["bc_lul4sldw"] });
+const PUBLIC_BASE_RPC = "https://mainnet.base.org";
 
 const MINT_ABI = [
   {
@@ -196,18 +197,20 @@ export default function MiniPage() {
       setPreviewIdx(i => (i + 1) % PREVIEW_SEEDS.length);
     }, 2000);
 
-    // Fetch totalMinted once on load (only if RPC URL is configured)
-    const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
-    if (rpcUrl) {
-      const publicClient = createPublicClient({ chain: base, transport: http(rpcUrl) });
-      publicClient.readContract({
-        address: CONTRACT_ADDRESS,
-        abi: LOBSTERS_ABI,
-        functionName: "totalMinted",
-      }).then((v) => {
-        if (!cancelled && !hasMintedRef.current) setTotalMinted(Number(v));
-      }).catch(() => {});
-    }
+    // Fetch totalMinted on load. The project cap is 804 even though the
+    // deployed contract can technically mint to 8004, so fail closed until
+    // supply is confirmed available.
+    const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || PUBLIC_BASE_RPC;
+    const publicClient = createPublicClient({ chain: base, transport: http(rpcUrl) });
+    publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: LOBSTERS_ABI,
+      functionName: "totalMinted",
+    }).then((v) => {
+      if (!cancelled && !hasMintedRef.current) setTotalMinted(Number(v));
+    }).catch(() => {
+      if (!cancelled) setTotalMinted(null);
+    });
 
     return () => {
       cancelled = true;
@@ -216,6 +219,17 @@ export default function MiniPage() {
   }, []);
 
   const handleMint = useCallback(async () => {
+    if (totalMinted === null) {
+      setErrorMsg("Checking mint availability. Try again in a moment.");
+      setMintState("error");
+      return;
+    }
+    if (totalMinted >= MAX_SUPPLY) {
+      setErrorMsg("The 804-lobster collection is sold out.");
+      setMintState("error");
+      return;
+    }
+
     setMintState("minting");
     setErrorMsg(null);
     try {
@@ -227,13 +241,22 @@ export default function MiniPage() {
         transport: custom(ethProvider),
       });
 
-      const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL;
-      if (!rpcUrl) throw new Error("RPC URL not configured");
+      const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || PUBLIC_BASE_RPC;
 
       const publicClient = createPublicClient({
         chain: base,
         transport: http(rpcUrl),
       });
+
+      const currentMinted = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: LOBSTERS_ABI,
+        functionName: "totalMinted",
+      });
+      setTotalMinted(Number(currentMinted));
+      if (currentMinted >= BigInt(MAX_SUPPLY)) {
+        throw new Error("The 804-lobster collection is sold out.");
+      }
 
       // Request accounts from the Farcaster wallet
       const accounts = await walletClient.requestAddresses();
@@ -293,7 +316,7 @@ export default function MiniPage() {
       setErrorMsg(msg);
       setMintState("error");
     }
-  }, []);
+  }, [totalMinted]);
 
   const handleShare = useCallback(async () => {
     if (tokenId === null) return;
@@ -355,8 +378,12 @@ export default function MiniPage() {
           </div>
           <div style={styles.priceLabel}>Mint price</div>
           <div style={styles.priceValue}>{MINT_PRICE_ETH} ETH</div>
-          <button style={styles.mintBtn} onClick={handleMint}>
-            MINT 🦞
+          <button
+            style={totalMinted !== null && totalMinted < MAX_SUPPLY ? styles.mintBtn : styles.mintBtnDisabled}
+            onClick={handleMint}
+            disabled={totalMinted === null || totalMinted >= MAX_SUPPLY}
+          >
+            {totalMinted === null ? "CHECKING..." : totalMinted >= MAX_SUPPLY ? "SOLD OUT" : "MINT 🦞"}
           </button>
 
           {/* Built by */}
@@ -412,8 +439,9 @@ export default function MiniPage() {
               setTokenId(null);
               setMintedSeed(null);
             }}
+            disabled={totalMinted !== null && totalMinted >= MAX_SUPPLY}
           >
-            MINT ANOTHER
+            {totalMinted !== null && totalMinted >= MAX_SUPPLY ? "SOLD OUT" : "MINT ANOTHER"}
           </button>
         </>
       )}
