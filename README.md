@@ -1,6 +1,6 @@
 # 🦞 Onchain Lobsters
 
-**8,004 generative pixel lobsters. Fully onchain. Minting burns $CLAWDIA forever.**
+**804 generative pixel lobsters. Fully onchain. Minting burns $CLAWDIA forever.**
 
 > 40×52 pixel art sprites rendered entirely in Solidity. No IPFS. No metadata servers. Every lobster lives onchain forever — the art is the contract.
 
@@ -13,11 +13,12 @@
 
 | Contract | Address |
 |---|---|
-| **OnchainLobsters** | [`0xbe37D95aAa5C624F0fd3549c0CAD88F9E876C660`](https://basescan.org/address/0xbe37D95aAa5C624F0fd3549c0CAD88F9E876C660) |
-| PixelRenderer | [`0x1256E5875C283F9F759a0F4CA6FB7BC6AeA9Cf55`](https://basescan.org/address/0x1256E5875C283F9F759a0F4CA6FB7BC6AeA9Cf55) |
-| PixelRendererOverlay | [`0x839cBe3deBF95ac6Ac2A12A644Ac7d1B6e72Af3b`](https://basescan.org/address/0x839cBe3deBF95ac6Ac2A12A644Ac7d1B6e72Af3b) |
+| **OnchainLobsters v8** | [`0xc9cDED1749AE3a46Bd4870115816037b82B24143`](https://basescan.org/address/0xc9cDED1749AE3a46Bd4870115816037b82B24143) |
+| PixelRenderer | [`0x518f55B8b769fc5E50d571950279399599A64042`](https://basescan.org/address/0x518f55B8b769fc5E50d571950279399599A64042) |
+| $CLAWDIA token | [`0xbbd9aDe16525acb4B336b6dAd3b9762901522B07`](https://basescan.org/token/0xbbd9aDe16525acb4B336b6dAd3b9762901522B07) |
+| OpenSea | [`onchain-lobsters`](https://opensea.io/collection/onchain-lobsters) |
 
-All three verified on Basescan.
+The current canonical collection is v8. Older deployed addresses in historical Foundry broadcasts are deprecated.
 
 ---
 
@@ -52,12 +53,14 @@ Specials use trait overrides — e.g., every Ghost forces `mutation=3, eyes=4, s
 
 ## Tokenomics
 
-- **Supply:** 8,004
+- **Supply:** 804 final collection size
 - **Mint price:** 0.005 ETH
 - **On every mint:** 50% of ETH swapped for [$CLAWDIA](https://basescan.org/token/0xbbd9aDe16525acb4B336b6dAd3b9762901522B07) via Uniswap V4 and burned via `burn()`
 - **Remaining 50%:** goes to treasury
 - **Secondary royalties:** 5% (configured in `contractURI`)
 - **$CLAWDIA:** `0xbbd9aDe16525acb4B336b6dAd3b9762901522B07`
+
+> Note: the deployed v8 contract has an immutable `MAX_SUPPLY` constant of `8004`. The project-level final collection size is **804**, enforced by the frontend and operations because the deployed contract cannot be changed in place.
 
 ---
 
@@ -142,7 +145,7 @@ forge script scripts/deploy.ts \
 ### Environment variables
 
 ```
-NEXT_PUBLIC_CONTRACT_ADDRESS=0xbe37D95aAa5C624F0fd3549c0CAD88F9E876C660
+NEXT_PUBLIC_CONTRACT_ADDRESS=0xc9cDED1749AE3a46Bd4870115816037b82B24143
 NEXT_PUBLIC_CHAIN_ID=8453
 ```
 

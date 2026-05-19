@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useSwitchChain } from "wagmi";
 import { base } from "wagmi/chains";
 import LobsterCanvas from "@/components/LobsterCanvas";
 import TraitSheet from "@/components/TraitSheet";
@@ -10,7 +10,7 @@ import { usePendingCommit } from "@/hooks/usePendingCommit";
 import { useBlockCountdown } from "@/hooks/useBlockCountdown";
 import { seedToTraits } from "@/lib/traits";
 import { generateSalt, computeCommitment, savePendingCommit, clearPendingCommit } from "@/lib/salt";
-import { CONTRACT_ADDRESS, LOBSTERS_ABI, MINT_PRICE_ETH, COMMIT_WINDOW_BLOCKS } from "@/constants";
+import { CONTRACT_ADDRESS, LOBSTERS_ABI, MINT_PRICE_ETH, COMMIT_WINDOW_BLOCKS, MAX_SUPPLY } from "@/constants";
 import { drawToCanvas, W, H } from "@/lib/renderer";
 import type { Traits } from "@/lib/renderer";
 
@@ -88,6 +88,11 @@ export default function MintPage() {
   const [pending, reloadPending] = usePendingCommit(address);
   const { commit } = useCommit();
   const { reveal } = useReveal();
+  const { data: totalMinted } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOBSTERS_ABI,
+    functionName: "totalMinted",
+  });
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [mintedTraits, setMinted] = useState<Traits | null>(null);
@@ -102,10 +107,15 @@ export default function MintPage() {
   const blocksLeft = useBlockCountdown(pending?.commitBlock ?? null);
   const canReveal = phase === "waiting" && blocksLeft !== null && blocksLeft <= 0;
   const isExpired = phase === "waiting" && blocksLeft !== null && blocksLeft < -COMMIT_WINDOW_BLOCKS;
+  const isMintSoldOut = typeof totalMinted === "bigint" && totalMinted >= BigInt(MAX_SUPPLY);
 
   // ── Commit ────────────────────────────────────────────────────────────────
   const handleCommit = useCallback(async () => {
     if (!address) return;
+    if (isMintSoldOut) {
+      setError("The 804-lobster collection is sold out.");
+      return;
+    }
     setPhase("committing");
     setError(null);
     try {
@@ -122,7 +132,7 @@ export default function MintPage() {
       setError(e.shortMessage ?? e.message ?? "Commit failed");
       setPhase("idle");
     }
-  }, [address, commit, publicClient, reloadPending]);
+  }, [address, commit, isMintSoldOut, publicClient, reloadPending]);
 
   // ── Reveal ────────────────────────────────────────────────────────────────
   const handleReveal = useCallback(async () => {
@@ -356,18 +366,29 @@ export default function MintPage() {
                   </div>
                 ))}
               </div>
+              {isMintSoldOut && (
+                <div style={{
+                  fontFamily: MONO, fontSize: 12, color: C.gold,
+                  letterSpacing: "0.1em", lineHeight: 1.8,
+                  padding: "12px 14px", marginBottom: 14,
+                  background: C.cardBg, border: `1px solid ${C.borderAct}`, borderRadius: 3,
+                }}>
+                  SOLD OUT AT 804 LOBSTERS
+                </div>
+              )}
               <button
                 onClick={handleCommit}
+                disabled={isMintSoldOut}
                 style={{
                   fontFamily: MONO, fontSize: 13, letterSpacing: "0.18em", fontWeight: 700,
-                  padding: "13px 24px", background: C.accent, color: "#fff",
-                  border: "none", borderRadius: 3, cursor: "pointer", width: "100%",
+                  padding: "13px 24px", background: isMintSoldOut ? "transparent" : C.accent, color: isMintSoldOut ? C.textMuted : "#fff",
+                  border: isMintSoldOut ? `1px solid ${C.border}` : "none", borderRadius: 3, cursor: isMintSoldOut ? "not-allowed" : "pointer", width: "100%",
                   transition: "opacity 0.15s",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
-                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                onMouseEnter={e => { if (!isMintSoldOut) e.currentTarget.style.opacity = "0.85"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
               >
-                MINT (SIGNATURE 1 OF 2)
+                {isMintSoldOut ? "SOLD OUT" : "MINT (SIGNATURE 1 OF 2)"}
               </button>
             </div>
           )}
@@ -579,16 +600,7 @@ export default function MintPage() {
         <span style={{ fontSize: 16 }}>🎟️</span>
         <span style={{ fontFamily: MONO, fontSize: 12, color: "#8888A8", lineHeight: 1.7 }}>
           <span style={{ color: "#C84820", fontWeight: 700 }}>Holder perk:</span>{" "}
-          owning any Onchain Lobster gives you free lifetime membership to{" "}
-          <a
-            href="https://agentfails.wtf"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#E8E8F2", textDecoration: "underline" }}
-          >
-            agentfails.wtf
-          </a>
-          {" "}— free posting forever, even after Phase 2.
+          TODO: a new Clawdia ecosystem perk for Onchain Lobster holders is being designed.
         </span>
       </div>
     </div>

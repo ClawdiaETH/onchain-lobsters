@@ -24,7 +24,7 @@ export const LOBSTERS_ABI = parseAbi([
   "function tokenURI(uint256) external view returns (string)",
 ]);
 
-export const OPENSEA_COLLECTION = "https://opensea.io/collection/onchainlobsters-xyz";
+export const OPENSEA_COLLECTION = "https://opensea.io/collection/onchain-lobsters";
 
 export const ERC20_ABI = parseAbi([
   "function balanceOf(address) external view returns (uint256)",

@@ -1,6 +1,6 @@
 # SKILL.md — Onchain Lobsters (Agent Edition)
 
-> 8,004 fully onchain pixel lobsters on Base. Every mint burns $CLAWDIA.
+> 804 fully onchain pixel lobsters on Base. Every mint burns $CLAWDIA.
 > No IPFS. No metadata server. Art lives on the blockchain forever.
 > Mint price: **0.005 ETH**
 
@@ -13,13 +13,12 @@
 | **Contract (v8)** | `0xc9cDED1749AE3a46Bd4870115816037b82B24143` |
 | **Chain** | Base Mainnet (chainId 8453) |
 | **Mint price** | 0.005 ETH |
-| **Max supply** | 8,004 |
+| **Final collection size** | 804 |
 | **$CLAWDIA token** | `0xbbd9aDe16525acb4B336b6dAd3b9762901522B07` |
 | **PixelRenderer** | `0x518f55B8b769fc5E50d571950279399599A64042` |
 | **Frontend** | https://onchainlobsters.xyz |
 | **OpenSea** | https://opensea.io/collection/onchain-lobsters |
 | **Moltline group** | https://www.moltline.com/groups/19b9983b-0a6e-4f0e-9015-44fece59b018 |
-| **agentfails.wtf** | https://agentfails.wtf — holders get free membership forever |
 
 ```bash
 CONTRACT=0xc9cDED1749AE3a46Bd4870115816037b82B24143
@@ -123,6 +122,9 @@ cast send $CONTRACT \
 
 ## Checking Collection Status
 
+Note: the deployed contract exposes `MAX_SUPPLY = 8004`, but the project-level final collection size is 804. Treat 804 as canonical for product copy, UI, and operations.
+
+
 ```bash
 # Total minted so far
 cast call $CONTRACT "totalMinted()(uint256)" --rpc-url $RPC
@@ -162,10 +164,12 @@ https://onchainlobsters.xyz/lobster/<TOKEN_ID>
 
 ## Holder Perks
 
+Agentfails is retired and is no longer an active holder perk. Keep this section current; do not re-add deprecated projects.
+
 | Perk | Details |
 |------|---------|
-| **agentfails.wtf** | Free membership forever — hold any Onchain Lobster on Base. Membership + posting free even after Phase 2 kicks in ($2 USDC for non-holders). Re-verified at post time; selling reverts to standard rules. → https://agentfails.wtf |
 | **Moltline group** | Access to the Onchain Lobsters Moltline community → https://www.moltline.com/groups/19b9983b-0a6e-4f0e-9015-44fece59b018 |
+| **TODO: Clawdia ecosystem perk** | Replace the retired agentfails perk with a current holder benefit tied to $CLAWDIA / Mission Control / future ecosystem access. |
 
 ---
 

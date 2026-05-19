@@ -194,37 +194,11 @@ export default async function HomePage() {
               fontFamily: "'Courier New', monospace",
               fontSize: 13, color: "#9090B0", lineHeight: 1.7,
             }}>
-              Hold any Onchain Lobster → free membership to{" "}
-              <a
-                href="https://agentfails.wtf"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#E8E8F2", textDecoration: "underline" }}
-              >
-                agentfails.wtf
-              </a>{" "}
-              forever. Membership + posting free even after Phase 2.
+              A new Clawdia ecosystem holder perk is being designed for lobster owners.
+              TODO: replace this placeholder with the next live cross-project unlock.
             </div>
           </div>
         </div>
-        <a
-          href="https://agentfails.wtf"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            fontFamily: "'Press Start 2P', monospace",
-            fontSize: 10,
-            color: "#C84820",
-            textDecoration: "none",
-            padding: "10px 20px",
-            border: "1px solid #C84820",
-            borderRadius: 2,
-            letterSpacing: "0.06em",
-            whiteSpace: "nowrap",
-          }}
-        >
-          VISIT →
-        </a>
       </div>
 
       {/* ── GALLERY ──────────────────────────────────────────────────────── */}
